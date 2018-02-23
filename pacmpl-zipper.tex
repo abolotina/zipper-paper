@@ -1,0 +1,274 @@
+%% For double-blind review submission, w/o CCS and ACM Reference (max submission space)
+\documentclass[acmsmall,review,anonymous]{acmart}\settopmatter{printfolios=true,printccs=false,printacmref=false}
+%% For double-blind review submission, w/ CCS and ACM Reference
+%\documentclass[acmsmall,review,anonymous]{acmart}\settopmatter{printfolios=true}
+%% For single-blind review submission, w/o CCS and ACM Reference (max submission space)
+%\documentclass[acmsmall,review]{acmart}\settopmatter{printfolios=true,printccs=false,printacmref=false}
+%% For single-blind review submission, w/ CCS and ACM Reference
+%\documentclass[acmsmall,review]{acmart}\settopmatter{printfolios=true}
+%% For final camera-ready submission, w/ required CCS and ACM Reference
+%\documentclass[acmsmall]{acmart}\settopmatter{}
+
+
+%% Journal information
+%% Supplied to authors by publisher for camera-ready submission;
+%% use defaults for review submission.
+\acmJournal{PACMPL}
+\acmVolume{1}
+\acmNumber{CONF} % CONF = POPL or ICFP or OOPSLA
+\acmArticle{1}
+\acmYear{2018}
+\acmMonth{1}
+\acmDOI{} % \acmDOI{10.1145/nnnnnnn.nnnnnnn}
+\startPage{1}
+
+%% Copyright information
+%% Supplied to authors (based on authors' rights management selection;
+%% see authors.acm.org) by publisher for camera-ready submission;
+%% use 'none' for review submission.
+\setcopyright{none}
+%\setcopyright{acmcopyright}
+%\setcopyright{acmlicensed}
+%\setcopyright{rightsretained}
+%\copyrightyear{2018}           %% If different from \acmYear
+
+%% Bibliography style
+\bibliographystyle{ACM-Reference-Format}
+%% Citation style
+%% Note: author/year citations are required for papers published as an
+%% issue of PACMPL.
+\citestyle{acmauthoryear}   %% For author/year citations
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Note: Authors migrating a paper from PACMPL format to traditional
+%% SIGPLAN proceedings format must update the '\documentclass' and
+%% topmatter commands above; see 'acmart-sigplanproc-template.tex'.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%% Some recommended packages.
+\usepackage{booktabs}   %% For formal tables:
+                        %% http://ctan.org/pkg/booktabs
+\usepackage{subcaption} %% For complex figures with subfigures/subcaptions
+                        %% http://ctan.org/pkg/subcaption
+
+
+\newcommand{\s}{$\hphantom{~}$}
+\newcommand{\Ra}{$\Rightarrow$\s}
+\newcommand{\ra}{$\rightarrow$\s}
+\newcommand{\vs}{\vspace{0.2cm}\\}
+
+
+\begin{document}
+
+%% Title information
+\title[Short Title]{Full Title}         %% [Short Title] is optional;
+                                        %% when present, will be used in
+                                        %% header instead of Full Title.
+%\titlenote{with title note}             %% \titlenote is optional;
+                                        %% can be repeated if necessary;
+                                        %% contents suppressed with 'anonymous'
+%\subtitle{Subtitle}                     %% \subtitle is optional
+%\subtitlenote{with subtitle note}       %% \subtitlenote is optional;
+                                        %% can be repeated if necessary;
+                                        %% contents suppressed with 'anonymous'
+
+
+%% Author information
+%% Contents and number of authors suppressed with 'anonymous'.
+%% Each author should be introduced by \author, followed by
+%% \authornote (optional), \orcid (optional), \affiliation, and
+%% \email.
+%% An author may have multiple affiliations and/or emails; repeat the
+%% appropriate command.
+%% Many elements are not rendered, but should be provided for metadata
+%% extraction tools.
+
+%% Author with single affiliation.
+\author{First1 Last1}
+%\authornote{with author1 note}          %% \authornote is optional;
+                                        %% can be repeated if necessary
+\orcid{nnnn-nnnn-nnnn-nnnn}             %% \orcid is optional
+\affiliation{
+  \position{Position1}
+  \department{Department1}              %% \department is recommended
+  \institution{Institution1}            %% \institution is required
+  \streetaddress{Street1 Address1}
+  \city{City1}
+  \state{State1}
+  \postcode{Post-Code1}
+  \country{Country1}                    %% \country is recommended
+}
+\email{first1.last1@inst1.edu}          %% \email is recommended
+
+%% Author with single affiliation.
+\author{First2 Last2}
+%\authornote{with author2 note}          %% \authornote is optional;
+                                        %% can be repeated if necessary
+\orcid{nnnn-nnnn-nnnn-nnnn}             %% \orcid is optional
+\affiliation{
+  \position{Position2}
+  \department{Department2}             %% \department is recommended
+  \institution{Institution2}           %% \institution is required
+  \streetaddress{Street2 Address2}
+  \city{City2}
+  \state{State2}
+  \postcode{Post-Code2}
+  \country{Country2}                   %% \country is recommended
+}
+\email{first2.last2@inst2.com}         %% \email is recommended
+
+
+%% Abstract
+%% Note: \begin{abstract}...\end{abstract} environment must come
+%% before \maketitle command
+\begin{abstract}
+Many of the commonly used today libraries for datatype-generic programming offer fixed-point view on datatypes to express the recursive structure. The \textsf{generics-sop} library is an approach to representing data using $n$-ary sums and products that both are list-like structures, which is different from the classical view where datatypes are represented as combinations of binary sums and products, and it does not encode recursive knots explicitly as with the fixed-point view. The representation allows for generic functions that do not need access to the recursive positions in the datatype structure, but it raises issues when it needs to deal with recursion. We present a technique that uses closed type families to allow us to handle recursive occurences. Moreover, we show, by giving an advanced example, that our approach allows the \textsf{generics-sop}'s view for families of mutually recursive datatypes.
+\end{abstract}
+
+
+%% 2012 ACM Computing Classification System (CSS) concepts
+%% Generate at 'http://dl.acm.org/ccs/ccs.cfm'.
+\begin{CCSXML}
+<ccs2012>
+<concept>
+<concept_id>10011007.10011006.10011008</concept_id>
+<concept_desc>Software and its engineering~General programming languages</concept_desc>
+<concept_significance>500</concept_significance>
+</concept>
+<concept>
+<concept_id>10003456.10003457.10003521.10003525</concept_id>
+<concept_desc>Social and professional topics~History of programming languages</concept_desc>
+<concept_significance>300</concept_significance>
+</concept>
+</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Software and its engineering~General programming languages}
+\ccsdesc[300]{Social and professional topics~History of programming languages}
+%% End of generated code
+
+
+%% Keywords
+%% comma separated list
+\keywords{Datatype-generic programming, Sums of products, Recursion, Closed type families, Zippers, Mutually recursive datatypes, Haskell}  %% \keywords are mandatory in final camera-ready submission
+
+
+%% \maketitle
+%% Note: \maketitle command must come after title commands, author
+%% commands, abstract environment, Computing Classification System
+%% environment and commands, and keywords command.
+\maketitle
+
+
+\section{Introduction}
+
+The classical way to generically view data is to represent constructors by nested binary sum types while constructor arguments are represented by nested binary product types~\citep{VanNoort2008, MuRec2009, Cheney2002, Magalhaes2010}\nocite{Rodriguez2008}. \citet{VriLoeh2014} describe a different sum-of-products approach to representing data using $n$-ary sums and products that both are lists of types, a sum of products is thus a list of lists of types. They call their view SOP that stands for a ``sum of products''---this is implemented in the \textsf{generics-sop} library and is based on several relatively recent extensions to the Haskell type system, such as \emph{data kinds}~\citep{Yorgey2012}, \emph{constraint kinds}, \emph{kind polymorphism}, and \emph{GADTs}. Using these Haskell's features, the library provides the generic view as well as a rich interface of high-level traversal combinators, such as for constructing sums and products, collapsing to homogeneous structures, and application, which together encourage generic function definition in more concise and high-level style compared to the classical binary sum-of-products views.
+
+Many generic functions require access to the recursive knots in the structure of datatypes. Some of the most general examples are \emph{maps}~\citep{Magalhaes2010} and \emph{folds}~\citep{Meijer1991, MuRec2009}, more advanced one is a \emph{zipper}~\citep{Huet1997, MuRec2009, HiJeLo2004}. For handling recursion, several generic programming approachs use different forms of fixed-point operator and represent the underlying polynomial functor~\citep{VanNoort2008, MuRec2009, Jansson1997, Loeh2011}\nocite{MagLoeh2012}. The SOP view allows to easily define functions that do not need to specially treat recursive occurences. But for those that do need it, as we show in our paper, there is a problem, so it normally does not allow. This paper introduces a method that makes it possible to define such functions within the SOP view, though the definitions are still quite complicated.
+
+\subsection{The SOP view}
+
+We first explain the terminology we borrow from the SOP and use throughout the paper. We show the core definitions of the SOP universe in Fig.~\ref{fig:sop}. The main idea is that a datatype is isomorphic to the sum-of-products of its code whose kind is a promoted list of lists of types \texttt{[[*]]} (here, the use of \textsf{DataKinds} extension enables datatype definitions to be promoted to kinds). This is specified using the \texttt{Code} type family. An $n$-ary sum and an $n$-ary product are therefore modelled as type-level heterogeneous lists: the inner list is an $n$-ary product that provides, depending on the constructor chosen, an appropriate sequence of constructor arguments; the outer list, an $n$-ary sum, corresponds to a choice between different constructors.
+
+A type of promoted lists has no inhabitants, so the universe provides the definitions to operate on $n$-ary sums (\texttt{NS}) and on $n$-ary products (\texttt{NP}) as on terms. The datatypes \texttt{NS} and \texttt{NP} are defined as GADTs and are indexed~\citep{HiJeLo2004} by a promoted datatype of lists. The universe defines these with built-in functor application, that is, each element of the term list is given by applying a particular type constructor (``interpretation function'') to a corresponding type in the type-level index list. The definitions of \texttt{NS} and \texttt{NP} both are kind polymorphic. The index list allows to be a list of arbitrary types of kind \texttt{k}, as the interpretation function \texttt{f} maps \texttt{k} to \texttt{*}.
+
+A common instantiation of \texttt{f}, which is enough for our goals, is the identity functor \texttt{I}
+\texttt{
+\vs
+newtype I (a :: *) = I \{unI :: a\}
+\vs
+}
+that is type-level equivalent of \texttt{id} function, for which the product becomes a heterogeneous list of types.
+
+An example value of a product looks thus:
+\texttt{
+\vs
+I 5 :* I True :* I 'x' :* Nil :: NP I '[Int, Bool, Char]
+\vspace{0.2cm}
+}
+
+The sum constructors resemble Peano numbers, so the choice from datatype's sum of products matches the index of a particular constructor in the index list and gives the constructor being chosen. The constructor \texttt{S} skips the first element of an $n$-element index list producing an index into a list that has $n+1$ elements, while \texttt{Zero} contains the payload of type \texttt{f x}. The below is an example value of a sum.
+\texttt{
+\vs
+S (S (Z (I 3))) :: NS I '[Char, Bool, Int, Bool]
+}
+
+\begin{figure}[t]
+\begin{tabular}{cc}
+\begin{tabular}[t]{l}
+\tt \textbf{type} Rep a = SOP f (Code a)
+\vs
+\tt \textbf{class} All SListI (Code a) \Ra\\
+\tt\s\s\s\s\s\s Generic (a :: *) \textbf{where}\\
+\tt\s\s \textbf{type} Code a :: [[*]]\\
+\tt\s\s from :: a \ra Rep a\\
+\tt\s\s to\s\s\s :: Rep a \ra a
+\end{tabular}
+&
+\begin{tabular}[t]{l}
+\tt \textbf{data} NS (f :: k \ra *) (xs :: [k]) \textbf{where}\\
+\tt\s\s Z :: f x \ra NS f (x ': xs)\\
+\tt\s\s S :: NS f xs \ra NS f (x ': xs)
+\vs
+\tt \textbf{data} NP (f :: k \ra *) (xs :: [k]) \textbf{where}\\
+\tt\s\s Nil\s\s :: NP f '[]\\
+\tt\s\s (:*) :: f x \ra NP f xs \ra NP f (x ': xs)
+\vs
+\end{tabular}\\
+\hline
+\end{tabular}
+\caption{The SOP view on data.}
+\label{fig:sop}
+\end{figure}
+
+\subsection{Problem with handling recursion}
+
+Let us illustrate the problem by giving a short example. The \textsf{QuickCheck}, a library for automatic testing of Haskell program properties, using \textsf{GHC.Generics}, defines the helper function \textsf{subterms} that obtains all the immediate subterms of a term that are of the same type as the term itself, that is, all the recursive positions in the term structure. To implement such the function using the SOP view, we have to say something like this:
+\texttt{
+\vs
+subterms :: Generic a \Ra a \ra [a]\\
+subterms t = subtermsNS (Proxy :: Proxy a) (unSOP \$ from t)
+\vs
+subtermsNS :: Proxy a \ra NS (NP I) xss \ra [a]\\
+subtermsNS p (S ns) = subtermsNS p ns\\
+subtermsNS p (Z np) = subtermsNP p np
+\vs
+subtermsNP :: Proxy a \ra NP I xs \ra [a]\\
+subtermsNP p (I x :* xs)\\
+\s\s | typeEq p x = witness p x : subtermsNP p xs\\
+\s\s | otherwise\s\s = subtermsNP p xs\\
+subtermsNP \_ Nil = []
+}
+
+
+%% Acknowledgments
+\begin{acks}                            %% acks environment is optional
+                                        %% contents suppressed with 'anonymous'
+  %% Commands \grantsponsor{<sponsorID>}{<name>}{<url>} and
+  %% \grantnum[<url>]{<sponsorID>}{<number>} should be used to
+  %% acknowledge financial support and will be used by metadata
+  %% extraction tools.
+  This material is based upon work supported by the
+  \grantsponsor{GS100000001}{National Science
+    Foundation}{http://dx.doi.org/10.13039/100000001} under Grant
+  No.~\grantnum{GS100000001}{nnnnnnn} and Grant
+  No.~\grantnum{GS100000001}{mmmmmmm}.  Any opinions, findings, and
+  conclusions or recommendations expressed in this material are those
+  of the author and do not necessarily reflect the views of the
+  National Science Foundation.
+\end{acks}
+
+
+%% Bibliography
+\bibliography{biblio}
+
+
+%% Appendix
+%\appendix
+%\section{Appendix}
+
+%Text of appendix \ldots
+
+\end{document}
