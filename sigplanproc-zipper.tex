@@ -1,0 +1,353 @@
+%% For double-blind review submission, w/o CCS and ACM Reference (max submission space)
+\documentclass[sigplan,review,anonymous]{acmart}\settopmatter{printfolios=true,printccs=false,printacmref=false}
+%% For double-blind review submission, w/ CCS and ACM Reference
+%\documentclass[sigplan,review,anonymous]{acmart}\settopmatter{printfolios=true}
+%% For single-blind review submission, w/o CCS and ACM Reference (max submission space)
+%\documentclass[sigplan,review]{acmart}\settopmatter{printfolios=true,printccs=false,printacmref=false}
+%% For single-blind review submission, w/ CCS and ACM Reference
+%\documentclass[sigplan,review]{acmart}\settopmatter{printfolios=true}
+%% For final camera-ready submission, w/ required CCS and ACM Reference
+%\documentclass[sigplan]{acmart}\settopmatter{}
+
+
+%% Conference information
+%% Supplied to authors by publisher for camera-ready submission;
+%% use defaults for review submission.
+\acmConference[PL'18]{ACM SIGPLAN Conference on Programming Languages}{January 01--03, 2018}{New York, NY, USA}
+\acmYear{2018}
+\acmISBN{} % \acmISBN{978-x-xxxx-xxxx-x/YY/MM}
+\acmDOI{} % \acmDOI{10.1145/nnnnnnn.nnnnnnn}
+\startPage{1}
+
+%% Copyright information
+%% Supplied to authors (based on authors' rights management selection;
+%% see authors.acm.org) by publisher for camera-ready submission;
+%% use 'none' for review submission.
+\setcopyright{none}
+%\setcopyright{acmcopyright}
+%\setcopyright{acmlicensed}
+%\setcopyright{rightsretained}
+%\copyrightyear{2018}           %% If different from \acmYear
+
+%% Bibliography style
+\bibliographystyle{ACM-Reference-Format}
+%% Citation style
+\citestyle{acmauthoryear}  %% For author/year citations
+%\citestyle{acmnumeric}     %% For numeric citations
+%\setcitestyle{nosort}      %% With 'acmnumeric', to disable automatic
+                            %% sorting of references within a single citation;
+                            %% e.g., \cite{Smith99,Carpenter05,Baker12}
+                            %% rendered as [14,5,2] rather than [2,5,14].
+%\setcitesyle{nocompress}   %% With 'acmnumeric', to disable automatic
+                            %% compression of sequential references within a
+                            %% single citation;
+                            %% e.g., \cite{Baker12,Baker14,Baker16}
+                            %% rendered as [2,3,4] rather than [2-4].
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Note: Authors migrating a paper from PACMPL format to traditional
+%% SIGPLAN proceedings format must update the '\documentclass' and
+%% topmatter commands above; see 'acmart-sigplanproc-template.tex'.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%% Some recommended packages.
+\usepackage{booktabs}   %% For formal tables:
+                        %% http://ctan.org/pkg/booktabs
+\usepackage{subcaption} %% For complex figures with subfigures/subcaptions
+                        %% http://ctan.org/pkg/subcaption
+
+
+\newcommand{\s}{$\hphantom{~}$}
+\newcommand{\ind}{\s\s\s\s}
+\newcommand{\Ra}{$\Rightarrow$\s}
+\newcommand{\ra}{$\rightarrow$\s}
+\newcommand{\vs}{\vspace{0.2cm}\\}
+
+
+\begin{document}
+
+%% Title information
+\title[Short Title]{Full Title}         %% [Short Title] is optional;
+                                        %% when present, will be used in
+                                        %% header instead of Full Title.
+%\titlenote{with title note}             %% \titlenote is optional;
+                                        %% can be repeated if necessary;
+                                        %% contents suppressed with 'anonymous'
+%\subtitle{Subtitle}                     %% \subtitle is optional
+%\subtitlenote{with subtitle note}       %% \subtitlenote is optional;
+                                        %% can be repeated if necessary;
+                                        %% contents suppressed with 'anonymous'
+
+
+%% Author information
+%% Contents and number of authors suppressed with 'anonymous'.
+%% Each author should be introduced by \author, followed by
+%% \authornote (optional), \orcid (optional), \affiliation, and
+%% \email.
+%% An author may have multiple affiliations and/or emails; repeat the
+%% appropriate command.
+%% Many elements are not rendered, but should be provided for metadata
+%% extraction tools.
+
+%% Author with single affiliation.
+\author{First1 Last1}
+%\authornote{with author1 note}          %% \authornote is optional;
+                                        %% can be repeated if necessary
+\orcid{nnnn-nnnn-nnnn-nnnn}             %% \orcid is optional
+\affiliation{
+  \position{Position1}
+  \department{Department1}              %% \department is recommended
+  \institution{Institution1}            %% \institution is required
+  \streetaddress{Street1 Address1}
+  \city{City1}
+  \state{State1}
+  \postcode{Post-Code1}
+  \country{Country1}                    %% \country is recommended
+}
+\email{first1.last1@inst1.edu}          %% \email is recommended
+
+%% Author with single affiliation.
+\author{First2 Last2}
+%\authornote{with author2 note}          %% \authornote is optional;
+                                        %% can be repeated if necessary
+\orcid{nnnn-nnnn-nnnn-nnnn}             %% \orcid is optional
+\affiliation{
+  \position{Position2}
+  \department{Department2}             %% \department is recommended
+  \institution{Institution2}           %% \institution is required
+  \streetaddress{Street2 Address2}
+  \city{City2}
+  \state{State2}
+  \postcode{Post-Code2}
+  \country{Country2}                   %% \country is recommended
+}
+\email{first2.last2@inst2.com}         %% \email is recommended
+
+
+%% Abstract
+%% Note: \begin{abstract}...\end{abstract} environment must come
+%% before \maketitle command
+\begin{abstract}
+Many of the commonly used today libraries for datatype-generic programming offer a fixed-point view on datatypes to express the recursive structure. Some approachs based on sums of products, however, do not use a fixed point. Those views therefore allow for generic functions that do not need access to the recursive positions in the datatype structure, but raise issues when it needs to deal with recursion. A known unwelcome solution is use of overlapping instances. We present a technique that uses closed type families to allow us to eliminate overlapping for handling recursion. Moreover, we show, by giving an advanced example, that our idiom allows for families of mutually recursive datatypes.
+
+The \textsf{generics-sop} library is an approach to representing data using $n$-ary sums and products that both are list-like structures, which is different from the classical view where datatypes are represented as combinations of binary sums and products, and it does not encode recursive knots explicitly as with the fixed-point view. We have chosen this approach as a case study to demonstrate our solution.
+\end{abstract}
+
+
+%% 2012 ACM Computing Classification System (CSS) concepts
+%% Generate at 'http://dl.acm.org/ccs/ccs.cfm'.
+\begin{CCSXML}
+<ccs2012>
+<concept>
+<concept_id>10011007.10011006.10011008</concept_id>
+<concept_desc>Software and its engineering~General programming languages</concept_desc>
+<concept_significance>500</concept_significance>
+</concept>
+<concept>
+<concept_id>10003456.10003457.10003521.10003525</concept_id>
+<concept_desc>Social and professional topics~History of programming languages</concept_desc>
+<concept_significance>300</concept_significance>
+</concept>
+</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Software and its engineering~General programming languages}
+\ccsdesc[300]{Social and professional topics~History of programming languages}
+%% End of generated code
+
+
+%% Keywords
+%% comma separated list
+\keywords{Datatype-generic programming, Sums of products, Recursion, Overlapping instances, Closed type families, Zippers, Mutually recursive datatypes, Haskell}  %% \keywords are mandatory in final camera-ready submission
+
+
+%% \maketitle
+%% Note: \maketitle command must come after title commands, author
+%% commands, abstract environment, Computing Classification System
+%% environment and commands, and keywords command.
+\maketitle
+
+
+\section{Introduction}
+
+A classical way to generically view data is to represent constructors by nested binary sum types while constructor arguments are represented by nested binary product types~\citep{VanNoort2008, MuRec2009, Cheney2002, Magalhaes2010, Loeh2004}\nocite{Rodriguez2008}\nocite{Magalhaes2012}. \citet{VriLoeh2014} describe a different sum-of-products approach to representing data using $n$-ary sums and products that both are lists of types, a sum of products is thus a list of lists of types. They call their view SOP that stands for a ``sum of products''---this is implemented in the \textsf{generics-sop} library and is based on several relatively recent extensions to the Haskell type system, such as \emph{data kinds} and \emph{kind polymorphism}~\citep{Yorgey2012}, \emph{constraint kinds}, and \emph{GADTs}~\cite{Schrijvers2009}. Using these Haskell's features, the library provides the generic view as well as a rich interface of high-level traversal combinators, such as for constructing sums and products, collapsing to homogeneous structures, and application, which together encourage generic function definition in more concise and high-level style compared to the classical binary sum-of-products views.
+
+Many generic functions require access to the recursive knots in the structure of datatypes. Some of the most general examples are \emph{maps}~\citep{Magalhaes2010} and \emph{folds}~\citep{Meijer1991, MuRec2009}, more advanced one is a \emph{zipper}~\citep{Huet1997, MuRec2009, HiJeLo2004, Adams2010}. For handling recursion, several generic programming approachs use different forms of fixed-point operator and represent the underlying polynomial functor~\citep{VanNoort2008, MuRec2009, Jansson1997, Loeh2011}\nocite{MagLoeh2012}. The SOP view allows to easily define functions that do not need to specially treat recursive occurences. But for those that do need it, it normally does not allow.
+
+One possible solution is to construct a more more specific universe modifying the SOP core by explicitly encoding recursive positions using a fixed point. The fixed-point approach is not fundamentally incompatible with SOP~\citep{VriLoeh2014}, but doing so makes that more complicated. Besides, such a decision may lead to need for additional conversions between the views. Our method makes it possible to define functions that need access to recursive occurences within the SOP view without modifying it anyhow. However, the definitions are still quite verbose.
+
+Another known solution is use of overlapping instances. This is unwelcome, as involving overlapping instances complicates reasoning about the program semantics, makes it unstable because code with overlapping instances can indirectly alter the behavior, when resolving instance selection, if one adds more specific instances into scope by importing a new module. Furthermore, GHC does not reject ambiguous overlaps where neither of instances is more specific than the other and does not even report an error before attempting to use it at a type class function call site. This is also crucial in the security setting when code is compiled as safe, as GHC does not capture unsafe overlaps by detecting declaration of overlapping instances in a module and marking it unsafe~\citep{sh-overlapping}. Hence, the undesirable effect of overlapping instances becomes a problem in the setting of Safe Haskell. \citet{Kiselyov2004} show how to localize overlapping for access operations in a systematic way. Using \textit{closed type families}~\citep{Eisenberg2014}, we introduce an idiom that allows us to completely eliminate overlapping for handling recursion.
+
+We believe that our idea is suitable for a number of different sum-of-products approachs that do not exploit a fixed point---so there the described problem appears. We have chosen the \textsf{generics-sop} approach as a case study because we think it is a widely applicable library based on the interesting ideas for generic programming, and it relies on the recent GHC's extensions.
+
+To demonstrate our approach, we give several examples. Another interesting result of our work is an interface we provide for generic functions: the type class instances with them do not need to be manually declared, as we define the instances on the generic representation of datatypes.
+
+\paragraph{Contributions} This paper makes the following contributions:
+\begin{itemize}
+\item We introduce an idiom that allows to exclude use of overlapping instances for handling recursion in a number of sum-of-products approachs to datatype-generic programming that do not express recursive positions through a fixed point.
+\item We present our idea by giving several examples of generic functions, particularly the generic zipper for mutually recursive datatypes, using the \textsf{generics-sop} view.
+\item We provide a convenient interface for generic functions: there is no need to manually declare type class instances for using them.
+\end{itemize}
+
+\paragraph{Organization} The paper is organized as follows. In Section~\ref{sec:sop-problem}, we introduce the SOP view concepts and describe the problem. In Section~\ref{sec:handling-recursion}, we demonstrate our solution using closed type families and accompany it with several examples of generic functions. In Section~\ref{sec:generic-zipper}, we present an advanced example of the generic zipper for mutually recursive datatypes. In Section~\ref{sec:related-work}, we review related work, and we conclude in Section~\ref{sec:conclusion}.
+
+
+\section{The SOP universe and the problem}
+\label{sec:sop-problem}
+
+In this section, we first review the SOP view on data describing its basic concepts to introduce the terminology we are using. After this introduction, we discuss the problem with handling recursion by generic functions and illustrate it with a short example.
+
+\subsection{The SOP view}
+
+We first explain the terminology we borrow from SOP\nocite{Loeh2015}\nocite{generics-sop} and use throughout the paper. The main idea of the SOP view is that a datatype is isomorphic to the sum of products of its code whose kind is a list of lists of types---it makes use of the \textsf{DataKinds} extension that enables datatype definitions to be promoted to kinds. SOP expresses this using a \texttt{Code} type family:
+\texttt{
+\vs
+\textbf{type family} Code (a :: *) :: [[*]]
+\vs
+}
+An $n$-ary sum and an $n$-ary product are therefore modelled as type-level heterogeneous lists: the inner list is an $n$-ary product that provides a sequence of constructor arguments depending on the constructor chosen; the outer list, an $n$-ary sum, corresponds to a choice between different constructors.
+
+For example, the code for the datatype of binary trees
+\texttt{
+\vs
+data Tree a = Leaf a\\
+\ind\ind\ind | Node (Tree a) (Tree a)
+\vs
+}
+is supposed to be as follows:
+\texttt{
+\vs
+\textbf{type instance} Code (Tree a) =\\
+\ind '[ '[a]\\
+\ind\s , '[Tree a, Tree a]\\
+\ind\s ]
+\vspace{0.2cm}
+}
+
+\begin{figure}[t]
+\begin{tabular}{l}
+\tt \textbf{data} NP (f :: k \ra *) (xs :: [k]) \textbf{where}\\
+\tt\s\s Nil\s\s :: NP f '[]\\
+\tt\s\s (:*) :: f x \ra NP f xs \ra NP f (x ': xs)
+\vs
+\tt \textbf{data} NS (f :: k \ra *) (xs :: [k]) \textbf{where}\\
+\tt\s\s Z :: f x \ra NS f (x ': xs)\\
+\tt\s\s S :: NS f xs \ra NS f (x ': xs)
+\vs
+\hline
+\end{tabular}
+\caption{Datatypes for $n$-ary sums and products.}
+\label{fig:ns-np}
+\end{figure}
+
+A type of promoted lists has no inhabitants, so the universe provides datatypes to operate on $n$-ary sums and products as on terms. As shown in Figure~\ref{fig:ns-np}, the datatypes \texttt{NS} for an $n$-ary sum and \texttt{NP} for an $n$-ary product are defined as GADTs and are indexed~\citep{HiJeLo2004} by a promoted datatype of lists. The universe defines these with built-in functor application, where the functor is some type constructor. Each element of \texttt{NS} and \texttt{NP} is given by applying a functor to a corresponding type in the type-level index list. The definitions of \texttt{NS} and \texttt{NP} both are kind polymorphic. The index list allows to be a list of arbitrary types of kind \texttt{k}, as the functor \texttt{f} maps \texttt{k} to \texttt{*}.
+
+As a basic instantiation of \texttt{f}, SOP defines type-level equivalent of \texttt{id}, an identity functor \texttt{I}:
+\texttt{
+\vs
+\textbf{newtype} I (a :: *) = I \{unI :: a\}
+\vs
+}
+When instantiated with \texttt{I}, the product becomes a direct heterogeneous list of types.
+
+An example value of a product looks thus:
+\texttt{
+\vs
+I 5 :* I True :* Nil :: NP I '[Int, Bool]
+\vspace{0.2cm}
+}
+
+The sum constructors are similar to Peano numbers, so the choice from a datatype's sum of products matches the index of a particular constructor in the index list and gives the constructor being chosen. The constructor \texttt{S} skips the first element of an $n$-element index list producing an index into a list that has $n+1$ elements, while \texttt{Z} contains the payload of type \texttt{f x}.
+
+For example, the following chooses the third element of a sum:
+\texttt{
+\vs
+S (S (Z (I 3))) :: NS I '[Char, Bool, Int, Bool]
+\vspace{0.2cm}
+}
+
+With the representation datatypes \texttt{NS} and \texttt{NP}, SOP defines a \texttt{Generic} class with conversion functions \texttt{from} and \texttt{to} to witness the isomorphism between a datatype and its generic representation:
+\texttt{
+\vs
+\textbf{type} Rep a = SOP I (Code a)
+\vs
+\textbf{class} All SListI (Code a) \Ra\\
+\s\s\s\s\s\s Generic (a :: *) \textbf{where}\\
+\s\s \textbf{type} Code a :: [[*]]\\
+\s\s from :: a \ra Rep a\\
+\s\s to\s\s\s :: Rep a \ra a
+\vs
+}
+The \texttt{SOP} is a newtype for an \texttt{NS} of an \texttt{NP}, indexed by a type-level list of lists, and the structural representation \texttt{Rep} of a datatype is a type synonym for a \texttt{SOP I} of its code.
+
+The \texttt{All SListI} constraint in the \texttt{Generic} class definition is supposed to be always satisfied and an understanding of this detail is not necessary to understand the paper, but we will next use an understanding of the type family \texttt{All} specifying that a constraint holds for all elements of a list of types. Using constraints as types of a special kind \texttt{Constraint}, hence they can appear in type families, is allowed by the \textsf{ConstraintKinds} language extension.
+
+The \texttt{Generic} class definition in the \textsf{generics-sop} library uses a \textit{generic generic programming} technique~\citep{MagLoeh2014} to derive the instance for a particular datatype automatically using the internal \textsf{GHC.Generics} representation. Alternatively, the \textsf{generics-sop} library allows to generate the \texttt{Generic} instances using Template Haskell~\citep{SheardSPJ2002}.
+
+\subsection{Problem with handling recursion}
+
+Let us illustrate the problem by giving a short example. The \textsf{QuickCheck}~\citep{Claessen2011}, a library for automatic testing of Haskell program properties, using the \textsf{GHC.Generics} view, defines a helper function \texttt{subterms} that obtains all the immediate subterms of a term that are of the same type as the term itself, that is, all the recursive positions in the term structure. To implement such a function using the SOP view, we have to say something like this:
+\texttt{
+\vs
+subterms :: Generic a \Ra a \ra [a]\\
+subterms t = subtermsNS (Proxy :: Proxy a)\\
+\ind\ind\ind\ind\ind\ind (unSOP \$ from t)
+\vs
+subtermsNS :: Proxy a \ra NS (NP I) xss \ra [a]\\
+subtermsNS p (S ns) = subtermsNS p ns\\
+subtermsNS p (Z np) = subtermsNP p np
+\vs
+subtermsNP :: Proxy a \ra NP I xs \ra [a]\\
+subtermsNP p (I x :* xs)\\
+\s\s | typeEq p x = witness p x : subtermsNP p xs\\
+\s\s | otherwise\s\s = subtermsNP p xs\\
+subtermsNP \_ Nil = []
+}
+
+
+\section{Handling recursion with closed type families}
+\label{sec:handling-recursion}
+
+
+\section{The generic Zipper}
+\label{sec:generic-zipper}
+
+
+\section{Related work}
+\label{sec:related-work}
+
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+%% Acknowledgments
+\begin{acks}                            %% acks environment is optional
+                                        %% contents suppressed with 'anonymous'
+  %% Commands \grantsponsor{<sponsorID>}{<name>}{<url>} and
+  %% \grantnum[<url>]{<sponsorID>}{<number>} should be used to
+  %% acknowledge financial support and will be used by metadata
+  %% extraction tools.
+  This material is based upon work supported by the
+  \grantsponsor{GS100000001}{National Science
+    Foundation}{http://dx.doi.org/10.13039/100000001} under Grant
+  No.~\grantnum{GS100000001}{nnnnnnn} and Grant
+  No.~\grantnum{GS100000001}{mmmmmmm}.  Any opinions, findings, and
+  conclusions or recommendations expressed in this material are those
+  of the author and do not necessarily reflect the views of the
+  National Science Foundation.
+\end{acks}
+
+
+%% Bibliography
+\bibliography{biblio}
+
+
+%% Appendix
+%\appendix
+%\section{Appendix}
+
+%Text of appendix \ldots
+
+\end{document}

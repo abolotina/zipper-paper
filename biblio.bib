@@ -9,7 +9,7 @@
  pages = {549--554}
 }
 
-@MISC{McBr2001,
+@unpublished{McBride2001,
     author = {Conor McBride},
     title = {The Derivative of a Regular Type is its Type of One-Hole Contexts},
     year = {2001},
@@ -102,6 +102,42 @@
  keywords = {Polytypic programming, Generic Haskell, Digital searching}
 }
 
+@inproceedings{Kiselyov2004,
+ author = {Kiselyov, Oleg and L\"{a}mmel, Ralf and Schupke, Keean},
+ title = {Strongly Typed Heterogeneous Collections},
+ booktitle = {Proceedings of the 2004 ACM SIGPLAN Workshop on Haskell},
+ series = {Haskell '04},
+ year = {2004},
+ isbn = {1-58113-850-4},
+ location = {Snowbird, Utah, USA},
+ pages = {96--107},
+ numpages = {12},
+ url = {http://doi.acm.org/10.1145/1017472.1017488},
+ doi = {10.1145/1017472.1017488},
+ acmid = {1017488},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {collections, dependently typed programming, extensible records, haskell, type equality, type improvement, type-indexed rows, type-safe database access},
+}
+
+@inproceedings{Eisenberg2014,
+ author = {Eisenberg, Richard A. and Vytiniotis, Dimitrios and Peyton Jones, Simon and Weirich, Stephanie},
+ title = {Closed Type Families with Overlapping Equations},
+ booktitle = {Proceedings of the 41st ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages},
+ series = {POPL '14},
+ year = {2014},
+ isbn = {978-1-4503-2544-8},
+ location = {San Diego, California, USA},
+ pages = {671--683},
+ numpages = {13},
+ url = {http://doi.acm.org/10.1145/2535838.2535856},
+ doi = {10.1145/2535838.2535856},
+ acmid = {2535856},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {haskell, system fc, type families, type-level computation},
+}
+
 @inproceedings{VriLoeh2014,
  author = {Vries, Edsko de and L\"{o}h, Andres},
  title = {True Sums of Products},
@@ -120,32 +156,97 @@
  keywords = {datatype-generic programming, generic views, json, lenses, metadata, sums of products, universes},
 }
 
-@ARTICLE{Loh2004,
-    author = {Andres Löh},
-    title = {Exploring Generic Haskell},
-    year = {2004},
-	journal = {PhD thesis, Universiteit Utrecht}
+@inproceedings{Schrijvers2009,
+ author = {Schrijvers, Tom and Peyton Jones, Simon and Sulzmann, Martin and Vytiniotis, Dimitrios},
+ title = {Complete and Decidable Type Inference for GADTs},
+ booktitle = {Proceedings of the 14th ACM SIGPLAN International Conference on Functional Programming},
+ series = {ICFP '09},
+ year = {2009},
+ isbn = {978-1-60558-332-7},
+ location = {Edinburgh, Scotland},
+ pages = {341--352},
+ numpages = {12},
+ url = {http://doi.acm.org/10.1145/1596550.1596599},
+ doi = {10.1145/1596550.1596599},
+ acmid = {1596599},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {GADTs, Haskell, type inference},
 }
 
-@INPROCEEDINGS{Gib2007,
-  author = {Jeremy Gibbons},
-  title = {Datatype-Generic Programming},
-  year = {2007},
-  booktitle = {Spring School on Datatype-Generic Programming}
+@article{Claessen2011,
+ author = {Claessen, Koen and Hughes, John},
+ title = {QuickCheck: A Lightweight Tool for Random Testing of Haskell Programs},
+ journal = {SIGPLAN Not.},
+ issue_date = {April 2011},
+ volume = {46},
+ number = {4},
+ month = may,
+ year = {2011},
+ issn = {0362-1340},
+ pages = {53--64},
+ numpages = {12},
+ url = {http://doi.acm.org/10.1145/1988042.1988046},
+ doi = {10.1145/1988042.1988046},
+ acmid = {1988046},
+ publisher = {ACM},
+ address = {New York, NY, USA},
 }
 
-@INPROCEEDINGS{Loh2015,
-  author = {Andres Löh},
+@online{Loeh2015,
+  author = {Andres L\"{o}h},
   title = {Applying Type-Level and Generic Programming in Haskell},
+  month = {July},
   year = {2015},
-  booktitle = {Summer School on Generic and Effectful Programming}
+  howpublished = {Summer School on Generic and Effectful Programming},
+  note = {Lecture notes},
+  url = {https://github.com/kosmikus/SSGEP/blob/master/LectureNotes.pdf}
 }
 
-@ARTICLE{Ad2010,
-    author = {Michael D. Adams},
-    title = {Scrap Your Zippers: A Generic Zipper for Heterogeneous Types},
-    year = {2010},
-    journal = {The ACM SIGPLAN Workshop on Generic Programming}
+@online{sh-overlapping,
+    title = {Safe Haskell \& Overlapping Instances---GHC},
+	key = {GHC},
+	year = {2015},
+    url = {https://ghc.haskell.org/trac/ghc/wiki/SafeHaskell/NewOverlappingInstances}
+}
+
+@online{generics-sop,
+    title = {generics-sop: Generic Programming using True Sums of Products},
+	author = {Vries, Edsko de and L\"{o}h, Andres},
+	year = {2018},
+    url = {http://hackage.haskell.org/package/generics-sop}
+}
+
+@phdthesis{Magalhaes2012,
+  author = {Magalh\~{a}es, Jos{\'e} Pedro}, 
+  title = {Less Is More: Generic Programming Theory and Practice},
+  school = {Utrecht University},
+  year = 2012
+}
+
+@phdthesis{Loeh2004,
+  author = {Andres L\"{o}h}, 
+  title = {Exploring Generic Haskell},
+  school = {Utrecht University},
+  year = 2004
+}
+
+@inproceedings{Adams2010,
+ author = {Adams, Michael D.},
+ title = {Scrap Your Zippers: A Generic Zipper for Heterogeneous Types},
+ booktitle = {Proceedings of the 6th ACM SIGPLAN Workshop on Generic Programming},
+ series = {WGP '10},
+ year = {2010},
+ isbn = {978-1-4503-0251-7},
+ location = {Baltimore, Maryland, USA},
+ pages = {13--24},
+ numpages = {12},
+ url = {http://doi.acm.org/10.1145/1863495.1863499},
+ doi = {10.1145/1863495.1863499},
+ acmid = {1863499},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {generic programming, heterogeneous types, scrap your boilerplate, zippers},
 }
 
 @inproceedings{Yorgey2012,
@@ -245,9 +346,33 @@
  isbn = {978-3-540-47599-6}
 }
 
-@ARTICLE{GGP2014,
-    author = {José Pedro Magalhães and Andres Löh},
-    title = {Generic Generic Programming},
-    year = {2014},
-    journal = {International Symposium on Practical Aspects of Declarative Languages}
+@inproceedings{MagLoeh2014,
+ author = {Magalh{\~a}es, Jos{\'e} Pedro and L{\"o}h, Andres},
+ editor = {Flatt, Matthew and Guo, Hai-Feng},
+ title = {Generic Generic Programming},
+ booktitle = {Practical Aspects of Declarative Languages},
+ year = {2014},
+ publisher = {Springer International Publishing},
+ address = {Cham},
+ pages = {216--231},
+ abstract = {Generic programming (GP) is a form of abstraction in programming languages that serves to reduce code duplication by exploiting the regular structure of algebraic datatypes. Over the years, several different approaches to GP in Haskell have surfaced. These approaches are often similar, but certain differences make them particularly well-suited for one specific domain or application. As such, there is a lot of code duplication across GP libraries, which is rather unfortunate, given the original goals of GP.},
+ isbn = {978-3-319-04132-2}
+}
+
+@inproceedings{SheardSPJ2002,
+ author = {Sheard, Tim and Jones, Simon Peyton},
+ title = {Template Meta-programming for Haskell},
+ booktitle = {Proceedings of the 2002 ACM SIGPLAN Workshop on Haskell},
+ series = {Haskell '02},
+ year = {2002},
+ isbn = {1-58113-605-6},
+ location = {Pittsburgh, Pennsylvania},
+ pages = {1--16},
+ numpages = {16},
+ url = {http://doi.acm.org/10.1145/581690.581691},
+ doi = {10.1145/581690.581691},
+ acmid = {581691},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {meta programming, templates},
 }
