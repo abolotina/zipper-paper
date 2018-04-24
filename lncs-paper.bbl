@@ -1,0 +1,145 @@
+\begin{thebibliography}{10}
+\providecommand{\url}[1]{\texttt{#1}}
+\providecommand{\urlprefix}{URL }
+\providecommand{\doi}[1]{https://doi.org/#1}
+
+\bibitem{Adams2010}
+Adams, M.D.: Scrap your zippers: A generic zipper for heterogeneous types. In:
+  Proceedings of the 6th ACM SIGPLAN Workshop on Generic Programming. pp.
+  13--24. WGP '10, ACM, New York, NY, USA (2010). \doi{10.1145/1863495.1863499}
+
+\bibitem{Cheney2002}
+Cheney, J., Hinze, R.: A lightweight implementation of generics and dynamics.
+  In: Proceedings of the 2002 ACM SIGPLAN Workshop on Haskell. pp. 90--104.
+  Haskell '02, ACM, New York, NY, USA (2002). \doi{10.1145/581690.581698}
+
+\bibitem{Claessen2011}
+Claessen, K., Hughes, J.: Quickcheck: A lightweight tool for random testing of
+  Haskell programs. SIGPLAN Not.  \textbf{46}(4),  53--64 (May 2011).
+  \doi{10.1145/1988042.1988046}
+
+\bibitem{VriLoeh2014}
+De Vries, E., L\"{o}h, A.: True sums of products. In: Proceedings of the 10th
+  ACM SIGPLAN Workshop on Generic Programming. pp. 83--94. WGP '14, ACM, New
+  York, NY, USA (2014). \doi{10.1145/2633628.2633634}
+
+\bibitem{basic-sop}
+De Vries, E., L\"{o}h, A.: basic-sop: Basic examples and functions for generics-sop (2017),
+  \url{https://hackage.haskell.org/package/basic-sop}
+
+\bibitem{generics-sop}
+De Vries, E., L\"{o}h, A.: generics-sop: Generic programming using true sums of
+  products (2018), \url{http://hackage.haskell.org/package/generics-sop}
+
+\bibitem{Eisenberg2014}
+Eisenberg, R.A., Vytiniotis, D., Peyton~Jones, S., Weirich, S.: Closed type
+  families with overlapping equations. In: Proceedings of the 41st ACM
+  SIGPLAN-SIGACT Symposium on Principles of Programming Languages. pp.
+  671--683. POPL '14, ACM, New York, NY, USA (2014).
+  \doi{10.1145/2535838.2535856}
+
+\bibitem{sh-overlapping}
+Safe Haskell \& overlapping instances---GHC (2015),
+  \url{https://ghc.haskell.org/trac/ghc/wiki/SafeHaskell/NewOverlappingInstances}
+
+\bibitem{HiJeLo2004}
+Hinze, R., Jeuring, J., L\"{o}h, A.: Type-indexed data types. Science of
+  Computer Programming  \textbf{51}(1),  117--151 (2004).
+  \doi{10.1016/j.scico.2003.07.001}, Mathematics of Program Construction (MPC
+  2002)
+
+\bibitem{Huet1997}
+Huet, G.: The zipper. Journal of Functional Programming  \textbf{7}(5),
+  549--554 (1997)
+
+\bibitem{Jansson1997}
+Jansson, P., Jeuring, J.: Polyp---a polytypic programming language extension.
+  In: Proceedings of the 24th ACM SIGPLAN-SIGACT Symposium on Principles of
+  Programming Languages. pp. 470--482. POPL '97, ACM, New York, NY, USA (1997).
+  \doi{10.1145/263699.263763}
+
+\bibitem{Kiselyov2004}
+Kiselyov, O., L\"{a}mmel, R., Schupke, K.: Strongly typed heterogeneous
+  collections. In: Proceedings of the 2004 ACM SIGPLAN Workshop on Haskell. pp.
+  96--107. Haskell '04, ACM, New York, NY, USA (2004).
+  \doi{10.1145/1017472.1017488}
+
+\bibitem{Loeh2004}
+L\"{o}h, A.: Exploring Generic Haskell. Ph.D. thesis, Utrecht University (2004)
+
+\bibitem{Loeh2015}
+L\"{o}h, A.: Applying type-level and generic programming in Haskell (2018),
+  \url{https://github.com/kosmikus/SSGEP/blob/master/LectureNotes.pdf}, Summer
+  School on Generic and Effectful Programming (SSGEP 2015)
+
+\bibitem{Loeh2011}
+L\"{o}h, A., Magalh\~{a}es, J.P.: Generic programming with indexed functors.
+  In: Proceedings of the Seventh ACM SIGPLAN Workshop on Generic Programming.
+  pp. 1--12. WGP '11, ACM, New York, NY, USA (2011).
+  \doi{10.1145/2036918.2036920}
+
+\bibitem{Magalhaes2012}
+Magalh\~{a}es, J.P.: Less Is More: Generic Programming Theory and Practice.
+  Ph.D. thesis, Utrecht University (2012)
+
+\bibitem{Magalhaes2010}
+Magalh\~{a}es, J.P., Dijkstra, A., Jeuring, J., L\"{o}h, A.: A generic deriving
+  mechanism for Haskell. In: Proceedings of the Third ACM Haskell Symposium on
+  Haskell. pp. 37--48. Haskell '10, ACM, New York, NY, USA (2010).
+  \doi{10.1145/1863523.1863529}
+
+\bibitem{MagLoeh2012}
+Magalh{\~{a}}es, J.P., L{\"{o}}h, A.: A formal comparison of approaches to
+  datatype-generic programming. In: Proceedings Fourth Workshop on
+  Mathematically Structured Functional Programming, MSFP@ETAPS 2012, Tallinn,
+  Estonia, 25 March 2012. pp. 50--67 (2012). \doi{10.4204/EPTCS.76.6}
+
+\bibitem{McBride2001}
+McBride, C.: The derivative of a regular type is its type of one-hole contexts
+  (2001), \url{http://strictlypositive.org/diff.pdf}, unpublished manuscript
+
+\bibitem{Meijer1991}
+Meijer, E., Fokkinga, M., Paterson, R.: Functional programming with bananas,
+  lenses, envelopes and barbed wire. In: Hughes, J. (ed.) Functional
+  Programming Languages and Computer Architecture. pp. 124--144. Springer
+  Berlin Heidelberg, Berlin, Heidelberg (1991)
+
+\bibitem{Morris2010}
+Morris, J.G., Jones, M.P.: Instance chains: Type class programming without
+  overlapping instances. In: Proceedings of the 15th ACM SIGPLAN International
+  Conference on Functional Programming. pp. 375--386. ICFP '10, ACM, New York,
+  NY, USA (2010). \doi{10.1145/1863543.1863596}
+
+\bibitem{Rodriguez2008}
+Rodriguez, A., Jeuring, J., Jansson, P., Gerdes, A., Kiselyov, O., Oliveira,
+  B.C.d.S.: Comparing libraries for generic programming in Haskell. In:
+  Proceedings of the First ACM SIGPLAN Symposium on Haskell. pp. 111--122.
+  Haskell '08, ACM, New York, NY, USA (2008). \doi{10.1145/1411286.1411301}
+
+\bibitem{Schrijvers2009}
+Schrijvers, T., Peyton~Jones, S., Sulzmann, M., Vytiniotis, D.: Complete and
+  decidable type inference for gadts. In: Proceedings of the 14th ACM SIGPLAN
+  International Conference on Functional Programming. pp. 341--352. ICFP '09,
+  ACM, New York, NY, USA (2009). \doi{10.1145/1596550.1596599}
+
+\bibitem{VanNoort2008}
+Van Noort, T., Rodriguez, A., Holdermans, S., Jeuring, J., Heeren, B.: A
+  lightweight approach to datatype-generic rewriting. In: Proceedings of the
+  ACM SIGPLAN Workshop on Generic Programming. pp. 13--24. WGP '08, ACM, New
+  York, NY, USA (2008). \doi{10.1145/1411318.1411321}  
+
+\bibitem{MuRec2009}
+Yakushev, A.R., Holdermans, S., L\"{o}h, A., Jeuring, J.: Generic programming
+  with fixed points for mutually recursive datatypes. In: Proceedings of the
+  14th ACM SIGPLAN International Conference on Functional Programming. pp.
+  233--244. ICFP '09, ACM, New York, NY, USA (2009).
+  \doi{10.1145/1596550.1596585}
+
+\bibitem{Yorgey2012}
+Yorgey, B.A., Weirich, S., Cretin, J., Peyton~Jones, S., Vytiniotis, D.,
+  Magalh\~{a}es, J.P.: Giving Haskell a promotion. In: Proceedings of the 8th
+  ACM SIGPLAN Workshop on Types in Language Design and Implementation. pp.
+  53--66. TLDI '12, ACM, New York, NY, USA (2012).
+  \doi{10.1145/2103786.2103795}
+
+\end{thebibliography}
