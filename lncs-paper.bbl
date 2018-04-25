@@ -8,6 +8,10 @@ Adams, M.D.: Scrap your zippers: A generic zipper for heterogeneous types. In:
   Proceedings of the 6th ACM SIGPLAN Workshop on Generic Programming. pp.
   13--24. WGP '10, ACM, New York, NY, USA (2010). \doi{10.1145/1863495.1863499}
 
+\bibitem{Chakravarty2009}
+Chakravarty, M.M.T., Ditu, G.C., Leshchinskiy, R.: Instant generics: Fast and
+  easy (2009), \url{http://www.cse.unsw.edu.au/~chak/papers/CDL09.html}
+
 \bibitem{Cheney2002}
 Cheney, J., Hinze, R.: A lightweight implementation of generics and dynamics.
   In: Proceedings of the 2002 ACM SIGPLAN Workshop on Haskell. pp. 90--104.
@@ -127,6 +131,12 @@ Van Noort, T., Rodriguez, A., Holdermans, S., Jeuring, J., Heeren, B.: A
   lightweight approach to datatype-generic rewriting. In: Proceedings of the
   ACM SIGPLAN Workshop on Generic Programming. pp. 13--24. WGP '08, ACM, New
   York, NY, USA (2008). \doi{10.1145/1411318.1411321}  
+
+\bibitem{Weirich2006}
+Weirich, S.: Replib: A library for derivable type classes. In: Proceedings of
+  the 2006 ACM SIGPLAN Workshop on Haskell. pp. 1--12. Haskell '06, ACM, New
+  York, NY, USA (2006). \doi{10.1145/1159842.1159844},
+  \url{http://doi.acm.org/10.1145/1159842.1159844}
 
 \bibitem{MuRec2009}
 Yakushev, A.R., Holdermans, S., L\"{o}h, A., Jeuring, J.: Generic programming

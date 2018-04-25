@@ -686,28 +686,28 @@ The list \texttt{xss} here is expected to be the context code, which this traver
 To construct the sum with the computed index and product, we again need a proof to witness that the product is type-consistent with the constructor choice. To choose the constructor from the context code, we can adopt \textsf{generics-sop}'s \emph{injections}\footnote{The actual definition of the type of injections in \textsf{generics-sop} slightly differs from this. We adapt that for presentation.}:
 \texttt{
 \vs
-\indent injections \ann \fa xs f. SListI xs \Ra NP (Injection f xs) xs
+\indent injections \ann \fa xs f. SListI xs \Ra NP (Inj f xs) xs
 \vs
-\indent newtype Injection f xs a = Inj \{apInj \ann f a \ra K (NS f xs) a\}
+\indent newtype Inj f xs a = Inj \{apInj \ann f a \ra K (NS f xs) a\}
 \vs
 }
-For \texttt{f} instantiated to \texttt{NP I} and \texttt{xs} to be the sum of products reflecting a representation code, \texttt{injections} creates a product of all constructor choices that inject appropriate constructor arguments into each sum.
+For \texttt{f} instantiated to \texttt{NP I} and \texttt{xs} to be the sum of products reflecting a representation code, \texttt{injections} creates a product of all constructor choices that inject appropriate constructor arguments into each sum. We can use injections to choose the one that matches the obtained index.
 
-We now can witness the choice using the proof of type equality we have defined in Section~\ref{sec:handling-recursion}. In the following definition, \texttt{f} is supposed to be instantiated to \texttt{Injection yss} where \texttt{yss} reflects the code of the context\footnote{This might be simplified by using a singleton type for \texttt{ConsN} instead of defining a type class function. However, when using a singleton, the recursive definition of \texttt{toFirstCtx} we give further requires a constraint on its function signature that leads to a nonterminating computation.}:
+We now can witness the choice using the proof of type equality we have defined in Section~\ref{sec:handling-recursion}. In the following definition, \texttt{f} is supposed to be instantiated to \texttt{Inj (NP I) xss} where \texttt{xss} reflects the code of the context\footnote{This might be simplified by using a singleton type for \texttt{ConsN} instead of defining a type class function. However, when using a singleton, the recursive definition of \texttt{toFirstCtx} we give further requires a constraint on its function signature that leads to a nonterminating computation.}:
 \texttt{
 \vs
 \indent class\ind Proof (Equal a b) (f a) (f b) \Ra ProofF f a b\\
 \indent instance Proof (Equal a b) (f a) (f b) \Ra ProofF f a b
 \vs
-\indent class ConsNInj (n \ann ConsN) (xs \ann [*]) where\\
-\indent\s\s consNInj \ann All (ProofF f xs) yss \Ra NP f yss \ra f xs
+\indent class ConsNInj (n \ann ConsN) (ys \ann [*]) where\\
+\indent\s\s consNInj \ann All (ProofF f ys) xss \Ra NP f xss \ra f ys
 \vs
 \indent instance ConsNInj n xs \Ra ConsNInj ('N n) xs where\\
-\indent\s\s consNInj (\_ :* yss) = consNInj @n yss\\
+\indent\s\s consNInj (\_ :* xss) = consNInj @n xss\\
 \indent\s\s consNInj Nil\ind\s\s\s\hs \hs\ths\tths= impossible\\
 \indent instance ConsNInj 'F xs where\\
-\indent\s\s consNInj ((ys \ann f ys) :* \_)\\
-\indent\ind = fromMaybe impossible \$ witnessEq @(Equal xs ys) ys\\
+\indent\s\s consNInj ((xs \ann f xs) :* \_)\\
+\indent\ind = fromMaybe impossible \$ witnessEq @(Equal xs ys) xs\\
 \indent\s\s consNInj Nil = impossible\\
 \indent instance ConsNInj 'None xs where\\
 \indent\s\s consNInj \_\s\s\s \hs\nths= impossible
@@ -716,22 +716,22 @@ We now can witness the choice using the proof of type equality we have defined i
 \indent impossible =  error "impossible"
 \vs
 }
-As long as the constructor index and product are computed correctly, the proof should never fail (\texttt{impossible}).
+As long as the constructor index and product type are computed correctly, the proof should never fail (\texttt{impossible}). And when it passes, this ensures by type check that the constructor choice for the given product type is faithful.
 
-Finally, we define a function that applies the injection and returns the constructed context for the given product, representing its constructor arguments, and index of that constructor:
+Finally, we define a function that applies the injection and returns the constructed context for the given product, representing its constructor arguments, and index of that constructor. The type of \texttt{injections} below will be inferred from the return type of the context.
 \texttt{
 \vs
-\indent type AppInj n xs code = (ConsNInj n xs, SListI code,\\
-\indent\ind\ind\ind\ind\ind\ind\s All (ProofF (Injection code) xs) code)
+\indent type AppInj n xs ctx =  (ConsNInj n xs, SListI ctx,\\
+\indent\ind\ind\ind\ind\ind\ind All (ProofF (Inj (NP I) ctx) xs) ctx)
 \vs
-\indent appInjCtx \ann \fa a n xs fam. AppInj n xs (CtxCode fam a)\\
+\indent appInjCtx \ann \fa n xs fam a. AppInj n xs (CtxCode fam a)\\
 \indent\ind\ind\s\s \Ra NP I xs \ra Context fam a\\
 \indent appInjCtx np\\
 \indent\s\s = Ctx \$ SOP \$ unK \$ apInj (consNInj @n injections) np
 \vspace{0.2cm}
 }
 
-The definition of \texttt{toFirstCtx} can now be given using \texttt{appInjCtx}. The following uses a type-level function \texttt{FstRecToHole} to compute the product type by replacing the first recursive occurence in the given datatype's product list with type \texttt{Hole}. Its definition is straightforward, and is omitted here.
+The definition of \texttt{toFirstCtx} can now be given using the defined functions \texttt{appInjCtx} and \texttt{fromFstRec}. The following makes use of a type-level function \texttt{FstRecToHole} to compute the product type by replacing the first recursive occurence in the given datatype's product list with type \texttt{Hole}. Its definition is straightforward, and is omitted here.
 \texttt{
 \vs
 \indent toFirstCtx \ann \fa fam c a. (Generic a, ToFirstCtx fam a)\\
@@ -742,7 +742,7 @@ The definition of \texttt{toFirstCtx} can now be given using \texttt{appInjCtx}.
 \indent\ind\ind\ind\s \Ra NS (NP I) xss \ra Context fam a\\
 \indent toFirstCtxNS (S ns) = toFirstCtxNS @('N n) ns\\
 \indent toFirstCtxNS (Z (np \ann NP I xs))\\
-\indent\s\s = appInjCtx @a @(CtxConsN (CtxCode fam a) n) \$\\
+\indent\s\s = appInjCtx @(CtxConsN (CtxCode fam a) n) \$\\
 \indent\ind\ind I (Proxy @n) :* fromFstRec @(FstRecToHole fam xs) np
 \vs
 \indent type ToFirstCtx fam a = ToFirstCtx' fam a 'F (Code a)
@@ -750,30 +750,39 @@ The definition of \texttt{toFirstCtx} can now be given using \texttt{appInjCtx}.
 }
 The \texttt{ToFirstCtx'} constraint here is a complex constraint for use of \texttt{appInjCtx} and \texttt{fromFstRec}, which involves extra type classes and a bit of type-level programming to deduce those particular constraints. Its definition is shown in Appendix~2. We omit this here for reasons of space.
 
-We have established the mechanism of translation, which is cumbersome but verifying, via the proof, that the constructed context will be correct for any given datatype and family. The other functions in the zipper interface can be implemented according to this technique.
+We have established the mechanism of translation, which is cumbersome but verifying, via the proof, that the constructed context will have the correct type for any given datatype and family. The other functions in the zipper interface can be implemented according to this technique.
 
 
 \section{Related work}
 \label{sec:related-work}
 
-Related work
+Over the years, there has been a lot of works that contribute to datatype-generic programming, and a lot of knowledge has been accumulated. Rodriguez et al.~\cite{Rodriguez2008} and Magalh{\~{a}}es and L{\"{o}}h~\cite{MagLoeh2012} review a number of existing approachs and provide their detailed comparison in different aspects. There are several generic views that use forms of the fixed point operator to express recursion in a datatype structure~\cite{VanNoort2008,MuRec2009,Jansson1997,Loeh2011}. And there are a number of approachs that do not make use of fixed points~\cite{Chakravarty2009,Cheney2002,Magalhaes2010,Weirich2006}, but explicitly encode recursion in the datatype representation. The SOP view~\cite{VriLoeh2014} which we use to demonstrate our technique is an approach to generic programming that does not reflect recursive positions in the generic representation of a datatype. This approach uses heterogeneous lists of types to encode sums and products in the generic representation.
+
+The idea similar to SOP has been proposed by Kiselyov~et~al.~\cite{Kiselyov2004} in their \textsf{HList} library for strongly typed heterogeneous collections. In their paper, they also discuss problems concerened with overlap which they use for access operations. They restrict overlap by introducing a type class using a functional dependency, which provides functionality of type equality that is similar to our solution. Morris and Jones~\cite{Morris2010} introduce the type-class system \textsf{ilab}, based on the Haskell 98 class system, with a new feature, called ``instance chains'', that allows to control overlap by using an explicit syntax in instance declarations, which resembles if-else chains. But use of instance chains and local use of overlap leave code error-prone as a consequence of type class oppennes. Closed type families~\cite{Eisenberg2014} were recently introduced in Haskell to solve the overlap problem.
+
+Several works show how to define the Zipper~\cite{Huet1997} generically for regular~\cite{HiJeLo2004,McBride2001}, mutually recursive~\cite{MuRec2009}, and heterogeneous~\cite{Adams2010} types using fixed-point generic views.
+
 
 
 \section{Conclusion}
 \label{sec:conclusion}
 
+It was believed until today, that defining generic functions that consider recursion points when looking at the generic representation of a datatype structure is only possible within generic views that explicitly express recursion in the datatype representation, whereas the other commonly used approachs to generic programming was considered as unsuitable for this task. There are some approachs that address this problem by means of local overlaps, where it needs to access the points of recursion. We have developed the technique that allows us to define generic functions that treat recursion without its explicit encoding and overlap. This makes use of closed type families that are the recent Haskell extension.
+
+We have demonstrated that the method suits for advanced recursive schemes, such as the generic zipper interface, and supports families of mutually recursive datatypes. Though it is still easier to treat recursion where the explicit encoding is used, once we have shown that the problem of handling recursion in datatype-generic approachs is not critical, it encourages to invent new generic universes not worrying about the recursion support, but rather focusing on other generic programming tasks.
+
+
 \section*{Appendix 1}
 
 In this appendix, we show the implementation of the generic function \texttt{gshow}, which uses \texttt{caseShow}, described in Section~\ref{sec:gshow}. The \texttt{gshow} function is originally defined by De Vries and L\"{o}h in the \textsf{basic-sop} package~\cite{basic-sop}. Their implementation has the issue that for recursive datatypes whose recursive nodes should be displayed within parentheses, the function acts incorrectly due to the SOP view's limitations on expressing recursion. We improve the implementation from \textsf{basic-sop} with our approach to handling recursion.
 
-The \texttt{gshow} function makes use of metadata provided by the \texttt{generics-sop} library through the class \texttt{HasDatatypeInfo}. That class delivers generic functions for handling meta-information which \textsf{generics-sop} defines separate from the main generic representation of a datatype. The definition of \texttt{gshow} using those functions is as follows:
+The \texttt{gshow} function makes use of metadata provided by the \textsf{generics-sop} library through the class \texttt{HasDatatypeInfo}. That class delivers generic functions for handling meta-information which \textsf{generics-sop} defines separate from the main generic representation of a datatype. The definition of \texttt{gshow} using those functions is as follows:
 \texttt{
 \vs
 \indent\textbf{type} GShow a = (Generic a, HasDatatypeInfo a,\\
 \indent\ind\ind\ind\ind All2 (CaseRecShow a) (Code a))
 \vs
 \indent gshow \ann \fa a. GShow a \Ra a \ra String\\
-\ind\ind\s\Ra a \ra String\\
 \indent gshow t = gshow' @a (constructorInfo \$ datatypeInfo \$ Proxy @a)\\
 \indent\ind\ind\ind\ind\ind \$ from t
 \vs
@@ -871,7 +880,7 @@ Here, we give the full definition of the \texttt{ToFirstCxt'} constraint using d
 \indent \ind\s\s\s All (FromFstRec' fam) xss,\\
 \indent \ind\s\s\s AllNum (CtxConsNInj fam a) xss n,\\
 \indent \ind\s\s\s AllNum (CtxAllProofF\\
-\indent \ind\ind\ind\ind\s (Injection (CtxCode fam a))\\
+\indent \ind\ind\ind\ind\s (Inj (NP I) (CtxCode fam a))\\
 \indent \ind\ind\ind\ind\s fam (CtxCode fam a)) xss n)
 }
 
