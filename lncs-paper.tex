@@ -80,19 +80,21 @@ There are many generic functions that deal with the recursive knots, when traver
 
 One possible solution to the aforementioned shortcoming of SOP is to modify the SOP core by explicitly encoding recursive positions using the fixed point approach. This may complicate the whole framework significantly. Besides, such a decision may lead to extra conversions between the generic views.
 
-Another known solution uses overlapping instances. This usually unwelcome Haskell extension complicates reasoning about the semantics of code. In particular, the program behavior becomes unstable for it can be affected by any module defining more specific instances. Morris and Jones~\cite{Morris2010} extensively discuss the problems arising from overlapping instances and introduce the type system \textsf{ilab} with a feature called \emph{instance chains} that advances control of overlap. The overlap problem also strikes in the security setting when a code is compiled as \texttt{-XSafe} for GHC does not reflect unsafe overlaps and marks the module as safe~\cite{sh-overlapping}.
+Another known solution uses overlapping instances. This usually unwelcome Haskell extension complicates reasoning about the semantics of code. In particular, the program behavior becomes unstable for it can be affected by any module defining more specific instances. Morris and Jones~\cite{Morris2010} extensively discuss the problems arising from overlapping instances.
+% and introduce the type system \textsf{ilab} with a feature called \emph{instance chains} that advances control of overlap. 
+The overlap problem also strikes in the security setting when a code is compiled as \texttt{-XSafe} for GHC does not reflect unsafe overlaps and marks the module as safe~\cite{sh-overlapping}.
 %Kiselyov et al.~\cite{Kiselyov2004} show how to localize overlap for access operations in a systematic way. Using \textit{closed type families}~\cite{Eisenberg2014}, we introduce an idiom that allows us to completely eliminate overlap for handling recursion.
 % -- this should go to Realted Work (if stays in the paper at all)
 
 We feel both existing approaches unsatisfactory and make the following contributions:
 \begin{itemize}
 \item We describe the problem with the current approach of SOP in detail (Section~\ref{sec:sop-problem}).
-\item We introduce an idiom that overcomes the problem. The approach avoids both, the use of overlapping instances and changing a generic representation. The presentation goes through several examples. (Section~\ref{sec:handling-recursion})
+\item We introduce an idiom that overcomes the problem. The approach avoids both, the use of overlapping instances and changing a generic representation. (Section~\ref{sec:handling-recursion})
 % -- 
 %\item We provide a convenient interface for generic functions: there is no need to manually declare type class instances for using them.
 % -- this doesn't sound like a contribution
-\item We evaluate our approach through development of a larger-scale use case~--- the generic zipper. The zipper is meant to be easily and flexibly used with families of mutually recursive datatypes (Section~\ref{sec:generic-zipper}).
-\item We note, that our the approach can contribute to \textsf{generics-sop} eliminating boilerplate instance declarations which come as a consequence of absence of information about recursion points~(Section~\ref{sec:gshow}).
+\item We evaluate our approach through the development of a larger-scale use case---the generic zipper. The zipper is meant to be easily and flexibly used with families of mutually recursive datatypes (Section~\ref{sec:generic-zipper}).
+\item We note, that our approach can contribute to the \textsf{generics-sop}'s one eliminating some boilerplate instance declarations which necessarily  arise in practice as a consequence of absence of information about recursion points. An example of that, taken from the \textsf{basic-sop}~\cite{basic-sop} package, is discussed in Section~\ref{sec:gshow}.
 \end{itemize}
 
 We believe that our idea is suitable for any sum-of-products approach that do not exploit a fixed point view and thus subject to the problem. We choose the \textsf{generics-sop} approach as a case study because it appears to be a widely applicable library and builds on powerful language extensions implemented in GHC.
