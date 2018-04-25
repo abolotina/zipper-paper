@@ -760,7 +760,7 @@ Over the years, there has been a lot of works that contribute to datatype-generi
 
 The idea similar to SOP has been proposed by Kiselyov~et~al.~\cite{Kiselyov2004} in their \textsf{HList} library for strongly typed heterogeneous collections. In their paper, they also discuss problems concerened with overlap which they use for access operations. They restrict overlap by introducing a type class using a functional dependency, which provides functionality of type equality that is similar to our solution. Morris and Jones~\cite{Morris2010} introduce the type-class system \textsf{ilab}, based on the Haskell 98 class system, with a new feature, called ``instance chains'', that allows to control overlap by using an explicit syntax in instance declarations, which resembles if-else chains. But use of instance chains and local use of overlap leave code error-prone as a consequence of type class oppennes. Closed type families~\cite{Eisenberg2014} were recently introduced in Haskell to solve the overlap problem.
 
-Several works show how to define the Zipper~\cite{Huet1997} generically for regular~\cite{HiJeLo2004,McBride2001}, mutually recursive~\cite{MuRec2009}, and heterogeneous~\cite{Adams2010} types using fixed-point generic views.
+Several works show how to define the Zipper~\cite{Huet1997} generically for regular~\cite{HiJeLo2004,McBride2001} and mutually recursive~\cite{MuRec2009} types using fixed-point generic views. Adams~\cite{Adams2010} defines a generic zipper for heterogeneous types.
 
 
 
