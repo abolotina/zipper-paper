@@ -44,26 +44,27 @@
 % If the paper title is too long for the running head, you can set
 % an abbreviated paper title here
 %
-\author{First Author\inst{1} \and
-Second Author\inst{2}}
+\author{Anonymous%First Author\inst{1} \and
+%Second Author\inst{2}
+}
 %
 %\authorrunning{F. Author and S. Author}
 % First names are abbreviated in the running head.
 % If there are more than two authors, 'et al.' is used.
 %
-\institute{Springer Heidelberg, Tiergartenstr. 17, 69121 Heidelberg, Germany\\
-\email{lncs@springer.com} \and
-ABC Institute, Rupert-Karls-University Heidelberg, Heidelberg, Germany\\
-\email{abc@uni-heidelberg.de}}
+%~ \institute{Springer Heidelberg, Tiergartenstr. 17, 69121 Heidelberg, Germany\\
+%~ \email{lncs@springer.com} \and
+%~ ABC Institute, Rupert-Karls-University Heidelberg, Heidelberg, Germany\\
+%~ \email{abc@uni-heidelberg.de}}
 %
 \maketitle              % typeset the header of the contribution
 %
 \begin{abstract}
-Many of the extensively used today libraries for datatype-generic programming offer a fixed-point view on datatypes to express the recursive structure. Some approachs based on sums of products, however, do not use a fixed point. Those views therefore allow for generic functions that do not require to look at the recursive knots in the datatype representation, but raise issues when it needs to deal with recursion. A known unwelcome solution is use of overlapping instances. We present a technique that uses closed type families to allow us to eliminate overlap for handling recursion. Moreover, we show that our idiom allows for families of mutually recursive datatypes.
+Many of the extensively used libraries for datatype-generic programming offer a fixed-point view on datatypes to express a recursive structure. Some approaches based on sums of products, however, do not use a fixed point. Those views therefore allow for generic functions that do not require to look at the recursive knots in a datatype representation, but raise issues when it needs to deal with recursion. A known and unwelcome solution is the use of overlapping instances. We present an approach that uses closed type families to eliminate the need of overlap for handling recursion. Moreover, we show that our idiom allows for families of mutually recursive datatypes.
 
-The \textsf{generics-sop} library is an approach to representing data using $n$-ary sums and products that both are list-like structures, which is different from the classical view where datatypes are expressed by separate binary sums and products, and it does not encode recursive knots explicitly as with the fixed-point view. We choose this approach as a case study to demonstrate our solution.
+%The \textsf{generics-sop} library is an approach to representing data using $n$-ary sums and products that both are list-like structures, which is different from the classical view where datatypes are expressed by separate binary sums and products, and it does not encode recursive knots explicitly as with the fixed-point view. We choose this approach as a case study to demonstrate our solution.
 
-\keywords{Datatype-generic programming \and Sums of products \and Recursion \and Overlapping instances \and Closed type families \and Zippers \and Mutually recursive datatypes \and Haskell.}
+\keywords{Datatype-generic programming \and Sums of products \and Recursion \and Overlapping instances \and Closed type families \and Zipper \and Mutually recursive datatypes \and Haskell.}
 \end{abstract}
 %
 %
@@ -71,28 +72,36 @@ The \textsf{generics-sop} library is an approach to representing data using $n$-
 \section{Introduction}
 \label{sec:introduction}
 
-A classical way to generically view data is to represent constructors as chains of nested binary sums, and constructor arguments as chains of nested binary products~\cite{VanNoort2008,Cheney2002,Loeh2004}\nocite{Rodriguez2008}\nocite{Magalhaes2012}. De Vries and L\"{o}h~\cite{VriLoeh2014} describe a different sum-of-products approach to representing data using $n$-ary sums and products that both are lists of types, a sum of products is thus a list of lists of types. They call their view SOP that stands for a ``sum of products''---this is implemented in the \textsf{generics-sop}~\cite{generics-sop} library and is based on several relatively recent extensions to the Haskell type system, such as \emph{data kinds} and \emph{kind polymorphism}~\cite{Yorgey2012}, \emph{constraint kinds}, and \emph{GADTs}~\cite{Schrijvers2009}. Using these Haskell features, the library provides the generic view and equips it with a rich collection of high-level combinators, such as for constructing sums and products, collapsing to homogeneous structures, and application, which are an expressive instrument for defining generic functions in a more succinct and high-level style compared to the classical binary sum-of-products views.
+A classical way to generically describe a datatype is to represent its constructors as the chains of nested binary sums, and turn constructor arguments into the chains of nested binary products~\cite{VanNoort2008,Cheney2002,Loeh2004}\nocite{Rodriguez2008}\nocite{Magalhaes2012}. De Vries and L\"{o}h~\cite{VriLoeh2014} describe a different sum-of-products approach to representing data using $n$-ary sums and products that both are lists of types, a sum of products is thus a list of lists of types. They call their view SOP which stands for a ``sum of products''~--- this is implemented in the \textsf{generics-sop}~\cite{generics-sop} library and is based on several relatively recent extensions to the Haskell type system, such as \emph{data kinds}, \emph{kind polymorphism}~\cite{Yorgey2012} and \emph{constraint kinds}.
+%, and \emph{GADTs}~\cite{Schrijvers2009}. -- very old extension, 2003 approx.
+Using these Haskell features, the library provides the generic view and equips it with a rich collection of high-level combinators, such as for constructing sums and products, collapsing to homogeneous structures, and application, which are an expressive instrument for defining generic functions in a more succinct and high-level style compared to the classical binary sum-of-products views.
 
-There are many generic functions that deal with the recursive knots, when traverse the structure of datatypes. Some of the most general examples are \emph{maps}~\cite{Magalhaes2010} and \emph{folds}~\cite{Meijer1991}, more advanced one is a \emph{zipper}~\cite{Huet1997,HiJeLo2004,Adams2010}. For handling recursion, several generic programming approachs express datatypes in the form of polynomial functors closed under fixed points~\cite{MuRec2009,Jansson1997,Loeh2011}\nocite{MagLoeh2012}. The SOP view allows to easily define functions that do not need to specially process recursive occurences. But for those that do need it, it normally does not allow.
+There are many generic functions that deal with the recursive knots, when traverse the structure of datatypes. Some of the most general examples are \emph{maps}~\cite{Magalhaes2010} and \emph{folds}~\cite{Meijer1991}, more advanced one is a \emph{zipper}~\cite{Huet1997,HiJeLo2004,Adams2010}. For handling recursion, several generic programming approaches express datatypes in the form of polynomial functors closed under fixed points~\cite{MuRec2009,Jansson1997,Loeh2011}. The SOP view naturally supports definitions of functions that do not require a knowledge about recursive occurrences, but otherwise it yields. 
 
-One possible solution is to construct a more specific universe modifying the SOP core by explicitly encoding recursive positions using a fixed point. The fixed-point approach can be combined with SOP~\cite{VriLoeh2014}, but doing so makes that more complicated. Besides, such a decision may lead to need for additional conversions between the views. Our method makes it possible to define functions that need access to recursive occurences within the SOP view without modifying it anyhow. However, the definitions are still quite verbose.
+One possible solution to the aforementioned shortcoming of SOP is to modify the SOP core by explicitly encoding recursive positions using the fixed point approach. This may complicate the whole framework significantly. Besides, such a decision may lead to extra conversions between the generic views.
 
-Another known solution is use of overlapping instances. This is unwelcome, as involving overlapping instances complicates reasoning about the code semantics, makes that unstable because it can affect the program behavior, if one adds a module with more specific instances. Morris and Jones~\cite{Morris2010} extensively discuss problems that may arise from using overlapping instances, and introduce the type system \textsf{ilab} with a feature called \emph{instance chains} that advances control of overlap, while type classes in \textsf{ilab} are open. But openness leaves a possibility for a rise of troubles---thus, defining instances in different modules still can cause issues. The overlap problem is also crucial in the security setting when code is compiled as safe, as GHC does not capture unsafe overlaps by detecting the presence of overlapping declarations and marking the module unsafe~\cite{sh-overlapping}. Hence, the undesirable effect of overlapping instances becomes a problem in the setting of Safe Haskell. Kiselyov et al.~\cite{Kiselyov2004} show how to localize overlap for access operations in a systematic way. Using \textit{closed type families}~\cite{Eisenberg2014}, we introduce an idiom that allows us to completely eliminate overlap for handling recursion.
+Another known solution uses overlapping instances. This usually unwelcome Haskell extension complicates reasoning about the semantics of code. In particular, the program behavior becomes unstable for it can be affected by any module defining more specific instances. Morris and Jones~\cite{Morris2010} extensively discuss the problems arising from overlapping instances, and introduce the type system \textsf{ilab} with a feature called \emph{instance chains} that advances control of overlap. The overlap problem also strikes in the security setting when a code is compiled as \texttt{-XSafe} for GHC does not reflect unsafe overlaps and marks the module as safe~\cite{sh-overlapping}.
+%Kiselyov et al.~\cite{Kiselyov2004} show how to localize overlap for access operations in a systematic way. Using \textit{closed type families}~\cite{Eisenberg2014}, we introduce an idiom that allows us to completely eliminate overlap for handling recursion.
+% -- this should go to Realted Work (if stays in the paper at all)
 
-We believe that our idea is suitable for a number of different sum-of-products approachs that do not exploit a fixed point---so there the described problem appears. We choose the \textsf{generics-sop} approach as a case study because we think it is a widely applicable library based on the interesting ideas for generic programming, and it relies on GHC's recent extensions.
-
-To demonstrate our solution, we give several examples including the generic zipper for families of mutually recursive datatypes. The approach we introduce has also advantages that contribute to \textsf{generics-sop} in addition to the main result of our work. There are examples of helpful generic functions defined in \textsf{basic-sop}~\cite{basic-sop} using the SOP view. Those definitions, however, suffer from that they require manual (boilerplate) instance declarations---as a consequence of that they do not take recursion points in a data structure into account, as we will show. We surmount this inconvenience in an interface that we provide for generic functions: the type class instances with them do not need to be manually declared. The zipper definition we offer is also very flexible for use with different families of datatypes in comparison with known generic solutions for a zipper, as it just takes a family in the form of a list of its constituent types when starts traversing a structure, and needs no boilerplate to be written for a family in addition.
-
-\paragraph{Contributions} This paper makes the following contributions:
+We feel both existing approaches unsatisfactory and make the following contributions:
 \begin{itemize}
-\item We introduce an idiom that allows to exclude use of overlapping instances for handling recursion in a number of sum-of-products approachs to datatype-generic programming that do not express recursive positions through a fixed point.
-\item We present our idea by giving several examples of generic functions, particularly the generic zipper for mutually recursive datatypes, using the \textsf{generics-sop} view.
-\item We provide a convenient interface for generic functions: there is no need to manually declare type class instances for using them.
-\item We develop the generic zipper that can be simply and flexibly used with different families of mutually recursive datatypes.
+\item We describe the problem with the current approach of SOP in detail (Section~\ref{sec:sop-problem}).
+\item We introduce an idiom that overcomes the problem. The approach avoids both, the use of overlapping instances and changing a generic representation. The presentation goes through several examples. (Section~\ref{sec:handling-recursion})
+% -- 
+%\item We provide a convenient interface for generic functions: there is no need to manually declare type class instances for using them.
+% -- this doesn't sound like a contribution
+\item We evaluate our approach through development of a larger-scale use case — the generic zipper. The zipper is meant to be easily and flexibly used with families of mutually recursive datatypes (Section~\ref{sec:generic-zipper}).
+\item We note, that our the approach can contribute to \textsf{generics-sop} eliminating boilerplate instance declarations which come as a consequence of absence of information about recursion points~(Section~\ref{sec:gshow}).
 \end{itemize}
 
-\paragraph{Organization} The paper is organized as follows. In Section~\ref{sec:sop-problem}, we introduce the SOP view concepts and demonstrate the problem by a short example. In Section~\ref{sec:handling-recursion}, we show our solution using closed type families and accompany it with one more example of a generic function adapting the idea. In Section~\ref{sec:generic-zipper}, we present an advanced example of the generic zipper for mutually recursive datatypes. In Section~\ref{sec:related-work}, we review related work, and we conclude in Section~\ref{sec:conclusion}.
+We believe that our idea is suitable for any sum-of-products approach that do not exploit a fixed point view and thus subject to the problem. We choose the \textsf{generics-sop} approach as a case study because it appears to be a widely applicable library and builds on powerful language extensions implemented in GHC.
 
+
+%\paragraph{Organization} The paper is organized as follows. In Section~\ref{sec:sop-problem}, we introduce the SOP view concepts and demonstrate the problem by a short example. In Section~\ref{sec:handling-recursion}, we show our solution using closed type families and accompany it with one more example of a generic function adapting the idea. In Section~\ref{sec:generic-zipper}, we present an advanced example of the generic zipper for mutually recursive datatypes. In Section~\ref{sec:related-work}, we review related work, and we conclude in Section~\ref{sec:conclusion}.
+%
+% Organization part is not used these days (cf. any of the later papers by SPJ)
+% Instead, the Sec.-references are integrated into the Contributions part.
 
 \section{The SOP universe and the problem}
 \label{sec:sop-problem}
