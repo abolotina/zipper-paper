@@ -113,15 +113,15 @@ In this section, we first review the SOP view on data describing its basic conce
 \subsection{The SOP view}
 \label{sec:sop-view}
 
-We first explain the terminology we adopt from SOP~\cite{VriLoeh2014,Loeh2015} and use throughout the paper. The main idea of the SOP view is to use $n$-ary sums and products to view a datatype as its isomorphic code whose kind is a list of lists of types. Using the \textsf{DataKinds} extension that enables datatype definitions to be promoted to kinds, SOP expresses this code with a type family:
+We first explain the terminology we adopt from SOP~\cite{VriLoeh2014,Loeh2015} and use throughout the paper. The main idea of the SOP view is to use $n$-ary sums and products to represent a datatype as an isomorphic code whose kind is a list of lists of types. The SOP approach expresses the code using the \textsf{DataKinds} extension, with a type family:
 \texttt{
 \vs
 \indent\textbf{type family} Code (a \ann *) \ann [[*]]
 \vs
 }
-An $n$-ary sum and an $n$-ary product are therefore modelled as type-level heterogeneous lists: the inner list is an $n$-ary product that represents a sequence of constructor arguments depending on the chosen constructor; the outer list, an $n$-ary sum, corresponds to a choice of a particular constructor.
+An $n$-ary sum and an $n$-ary product are therefore modelled as type-level heterogeneous lists: the inner list is an $n$-ary product that represents a sequence of constructor arguments, while the outer list, an $n$-ary sum, corresponds to a choice of a particular constructor.
 
-For example, consider a datatype of binary trees:
+Consider, for instance, a datatype of binary trees:
 \texttt{
 \vs
 \indent\textbf{data} Tree a = Leaf a | Node (Tree a) (Tree a)
@@ -150,31 +150,35 @@ This datatype is isomorphic to the following code:
 \label{fig:ns-np}
 \end{figure}
 
-A type of promoted lists has no inhabitants, so the universe provides datatypes to operate on $n$-ary sums and products as on terms. As shown in Figure~\ref{fig:ns-np}, the datatypes \texttt{NS} for an $n$-ary sum and \texttt{NP} for an $n$-ary product are defined as GADTs and are \emph{indexed}~\cite{HiJeLo2004} by a promoted list of types. The universe defines these with embedded functor application, where the functor is some type constructor. Thus, each component of \texttt{NS} and \texttt{NP} corresponds to one type (its index) in the type-level list and has type \texttt{f x}, for an index type \texttt{x}. The definitions of \texttt{NS} and \texttt{NP} both are kind polymorphic. The index list allows to contain types of arbitrary kind \texttt{k}, since \texttt{k} turns to \texttt{*} by applying the type constructor \texttt{f}.
+%A type of promoted lists has no inhabitants, so the universe provides datatypes to operate on $n$-ary sums and products as on terms.
+% -- this sentence falls out of the flow of the paragraph
 
-As basic instantiation types of \texttt{f}, SOP defines an identity functor \texttt{I} that is type-level equivalent for \texttt{id}, and a constant functor \texttt{K}, for \texttt{const}:
+As shown in Figure~\ref{fig:ns-np}, the datatypes \texttt{NS} for an $n$-ary sum and \texttt{NP} for an $n$-ary product are defined as GADTs and are \emph{indexed}~\cite{HiJeLo2004} by a promoted list of types. The encoding also holds an auxiliary type constructor \texttt{f} (typically, a functor) which is meant to be applied to every element of the code. Therefore, \texttt{NP} is a tiny abstraction of a usual definition of a heterogeneous list The definitions of \texttt{NS} and \texttt{NP} are kind polymorphic. The index list allows to contain types of arbitrary kind \texttt{k}, since \texttt{k} turns to \texttt{*} by applying the type constructor \texttt{f}.
+
+Basic instantiations of type parameter \texttt{f} found in SOP are identity functor \texttt{I}, that is, a type-level equivalent for \texttt{id} function, and a constant functor \texttt{K}, an analog of \texttt{const}:
 \texttt{
 \vs
 \indent\textbf{newtype} I (a \ann *)\ind\ind\s\s\nhs = I \{unI \ann a\}\\
 \indent\textbf{newtype} K (a \ann *) (b \ann k) = K \{unK \ann a\}
 \vs
 }
-Whereas instantiated with \texttt{I}, \texttt{NP} is a direct heterogeneous list of types, with \texttt{K a}, it is essentially homogeneous. An example value of an \texttt{NP} for \texttt{I} looks thus:
+
+If instantiated with \texttt{I}, \texttt{NP} is a plain heterogeneous list of types, while \texttt{K a} turns it into homogeneous one. Here is an example value of \texttt{NP I}:
 \texttt{
 \vs
 \indent I 5 :* I True :* I 'x' :* Nil \ann NP I '[Int, Bool, Char]
 \vspace{0.2cm}
 }
 
-A clear idea underlies the sum definition. The constructor \texttt{S} of a sum skips the first element of an $n$-element index list giving an index in a list that has $n+1$ elements, while \texttt{Z} stores the payload of type \texttt{f x}. For example, the following chooses the third element of a sum:
+We turn to the sum definition now. The constructor \texttt{S} of \texttt{NS}, given an index in $n$-element list, results in an index in a list with $n+1$ elements, skipping the first one, while \texttt{Z} stores the payload of type \texttt{f x}. For example, the following chooses the third element of a sum:
 \texttt{
 \vs
 \indent S (S (Z (I 3))) \ann NS I '[Char, Bool, Int, Bool]
 \vs
 }
-The sum constructors are similar to Peano numbers, so the choice from a sum of products of a datatype matches the index of its particular constructor in the index list and gives the product representing arguments of that constructor.
+The sum constructors are similar to Peano numbers, so the choice from a sum of products of a datatype matches the index of its particular constructor in the index list and stores the product representing arguments of that constructor.
 
-With the representation datatypes \texttt{NS} and \texttt{NP}, SOP defines a \texttt{Generic} class with conversion functions \texttt{from} and \texttt{to} to witness the isomorphism between a datatype and its generic representation:
+With the \texttt{NS} and \texttt{NP} machinery at hand, SOP defines the \texttt{Generic} class with conversion functions \texttt{from} and \texttt{to} witnessing the isomorphism between a datatype and its generic representation:
 \texttt{
 \vs
 \indent\textbf{type} Rep a = SOP I (Code a)
@@ -185,11 +189,11 @@ With the representation datatypes \texttt{NS} and \texttt{NP}, SOP defines a \te
 \indent\s\s to\s\s\s \ann Rep a \ra a
 \vs
 }
-The sum of products \texttt{SOP f} is a newtype for \texttt{NS (NP f)}, indexed by a type-level list of lists, and the structural representation \texttt{Rep} of a datatype is a type synonym for a \texttt{SOP I} of its code. The functions \texttt{from} and \texttt{to} perform a shallow conversion of the datatype topmost layer---it does not recursively translate the constructor arguments.
+The sum of products type, \texttt{SOP f}, is a newtype-wrapper for \texttt{NS (NP f)}, and the structural representation \texttt{Rep} of a datatype \texttt{a} is a type synonym for a \texttt{SOP I} of \texttt{a}'s code. The functions \texttt{from} and \texttt{to} perform a shallow conversion of the datatype topmost layer---it does not recursively translate the constructor arguments.
 
-The \texttt{All SListI} constraint in the \texttt{Generic} class definition is supposed to be satisfied, and an understanding of this detail is not necessary to understand the paper, but we will next use an understanding of the constraint \texttt{All} specifying that a particular constraint holds for each member of a list of types\footnote{The definition of \texttt{All} is also kind polymorphic. Here, it applies the constraint to each inner list of types in the the outer list of lists.}. Using constraints as types of a special kind \texttt{Constraint}, hence they can appear as type parameters, is allowed by the \textsf{ConstraintKinds} language extension.
+We are leaving out discussion of the \texttt{All SListI} constraint in the \texttt{Generic} class definition as irrelevant to our work. Although, we do use \texttt{All} constraint combinator in the following. Therefore, it is worth noting that \texttt{All} applies particular constraint (e.g. \texttt{SListI} above) to each member of a list of types. The usage of constraints as type arguments allowed due to \textsf{ConstraintKinds} language extension introducing a dedicated kind \texttt{Constraint}.
 
-The \texttt{Generic} class definition in the \textsf{generics-sop} library allows to create the instance for a particular datatype automatically using internal \textsf{GHC.Generics}.
+We have introduced generic representation employed by the SOP library and are ready to describe the problem of handling recursion points stemming from the representation. 
 
 \subsection{Problem with handling recursion}
 \label{sec:recursion-problem}
