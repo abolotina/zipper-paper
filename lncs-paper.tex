@@ -795,10 +795,11 @@ Several works show how to define the Zipper~\cite{Huet1997} generically for regu
 \section{Conclusion}
 \label{sec:conclusion}
 
-It was believed until today, that defining generic functions that consider recursion points when looking at the generic representation of a datatype structure is only possible within generic views that explicitly express recursion in the datatype representation, whereas the other commonly used approaches to generic programming was considered as unsuitable for this task. There are some approaches that address this problem by means of local overlaps, where it needs to access the points of recursion. We have developed the technique that allows us to define generic functions that treat recursion without its explicit encoding and overlap. This makes use of closed type families that are the recent Haskell extension.
+Defining generic functions, which consider recursion points, is easy within generic views that are explicit about recursion in the datatype representation. Not so much otherwise. Although, there are some approaches that address the problem by means of global or local overlaps. We have developed the technique that allows one to define generic functions that treat recursion without its explicit encoding and without overlap. 
 
-We have demonstrated that the method suits for advanced recursive schemes, such as the generic zipper interface, and supports families of mutually recursive datatypes. Though it is still easier to treat recursion where the explicit encoding is used, once we have shown that the problem of handling recursion in datatype-generic approaches is not critical, it encourages to invent new generic universes not worrying about the recursion support, but rather focusing on other generic programming tasks.
+We have demonstrated that the method suits for advanced recursive schemes, such as the generic zipper interface. Also, it supports families of mutually recursive datatypes. 
 
+Arguably, it is still easier to treat recursion when ``explicit'' encoding is used. On the other hand, we believe, once the problem of handling recursion is shown to be manageable, new generic universes shall emerge, not worrying about the recursion support, but rather focusing on other generic programming problems.
 
 %
 % ---- Bibliography ----
