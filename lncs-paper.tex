@@ -153,9 +153,9 @@ This datatype is isomorphic to the following code:
 %A type of promoted lists has no inhabitants, so the universe provides datatypes to operate on $n$-ary sums and products as on terms.
 % -- this sentence falls out of the flow of the paragraph
 
-As shown in Figure~\ref{fig:ns-np}, the datatypes \texttt{NS} for an $n$-ary sum and \texttt{NP} for an $n$-ary product are defined as GADTs and are \emph{indexed}~\cite{HiJeLo2004} by a promoted list of types. The encoding also holds an auxiliary type constructor \texttt{f} (typically, a functor) which is meant to be applied to every element of the code. Therefore, \texttt{NP} is a tiny abstraction of a usual definition of a heterogeneous list The definitions of \texttt{NS} and \texttt{NP} are kind polymorphic. The index list allows to contain types of arbitrary kind \texttt{k}, since \texttt{k} turns to \texttt{*} by applying the type constructor \texttt{f}.
+As shown in Figure~\ref{fig:ns-np}, the datatypes \texttt{NS} for an $n$-ary sum and \texttt{NP} for an $n$-ary product are defined as GADTs and are \emph{indexed}~\cite{HiJeLo2004} by a promoted list of types. The encoding also holds an auxiliary type constructor \texttt{f} (typically, a functor) which is meant to be applied to every element of the index list. Therefore, \texttt{NP} is a tiny abstraction of a usual definition of a heterogeneous list The definitions of \texttt{NS} and \texttt{NP} are kind polymorphic. The index list allows to contain types of arbitrary kind \texttt{k}, since \texttt{k} turns to \texttt{*} by applying the type constructor \texttt{f}.
 
-Basic instantiations of type parameter \texttt{f} found in SOP are identity functor \texttt{I}, that is, a type-level equivalent for \texttt{id} function, and a constant functor \texttt{K}, an analog of \texttt{const}:
+Basic instantiations of type parameter \texttt{f} found in SOP are identity functor \texttt{I}, that is, a type-level equivalent for \texttt{id} function, and a constant functor \texttt{K}, an analogue of \texttt{const}:
 \texttt{
 \vs
 \indent\textbf{newtype} I (a \ann *)\ind\ind\s\s\nhs = I \{unI \ann a\}\\
@@ -191,7 +191,7 @@ With the \texttt{NS} and \texttt{NP} machinery at hand, SOP defines the \texttt{
 }
 The sum of products type, \texttt{SOP f}, is a newtype-wrapper for \texttt{NS (NP f)}, and the structural representation \texttt{Rep} of a datatype \texttt{a} is a type synonym for a \texttt{SOP I} of \texttt{a}'s code. The functions \texttt{from} and \texttt{to} perform a shallow conversion of the datatype topmost layer---it does not recursively translate the constructor arguments.
 
-We are leaving out discussion of the \texttt{All SListI} constraint in the \texttt{Generic} class definition as irrelevant to our work. Although, we do use \texttt{All} constraint combinator in the following. Therefore, it is worth noting that \texttt{All} applies particular constraint (e.g. \texttt{SListI} above) to each member of a list of types. The usage of constraints as type arguments allowed due to \textsf{ConstraintKinds} language extension introducing a dedicated kind \texttt{Constraint}.
+We are leaving out discussion of the \texttt{All SListI} constraint in the \texttt{Generic} class definition as irrelevant to our work. Although, we do use \texttt{All} constraint combinator in the following. Therefore, it is worth noting that \texttt{All} applies particular constraint (e.g. \texttt{SListI} above) to each member of a list of types. The usage of constraints as type arguments is allowed due to \textsf{ConstraintKinds} language extension introducing a dedicated kind \texttt{Constraint}.
 
 We have introduced generic representation employed by the SOP library and are ready to describe the problem of handling recursion points stemming from the representation. 
 
