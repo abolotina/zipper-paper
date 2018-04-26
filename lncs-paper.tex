@@ -251,7 +251,7 @@ Though this will work, and there are a number of the Hackage packages that do it
 
 In the previous section, we have shown a solution to the problem of handling recursion, which makes use of overlapping instances. We are going to improve the solution and remove overlap now.
 
-Closed type families are the Haskell language extension introduced by Eisenberg et al.~\cite{Eisenberg2014}. The main idea of the extension being that he equations for a \emph{closed type family} are disallowed outside its declaration. Under the extension, we can give the following definition of a type-level equality:
+Closed type families are the Haskell language extension introduced by Eisenberg et al.~\cite{Eisenberg2014}. The main idea of the extension being that the equations for a \emph{closed type family} are disallowed outside its declaration. Under the extension, we can give the following definition of type-level equality:
 \texttt{
 \vs
 \indent\textbf{type family} Equal a x \ann Bool \textbf{where}\\
@@ -299,7 +299,7 @@ As a side note, we make use of \textsf{ScopedTypeVariables} extension in the def
 
 To complete the solution of the problem, the \texttt{ProofEq} constraint must be added to the \texttt{subterms} and \texttt{subtermsNS} declarations as well.
 
-In summary, we claim that any generic function accessing recursive knots in the underlying datatype structure can be defined in the way described above for \texttt{subterms} task. We give another example showing how to adapt our idiom to different scenarios in the following section.
+In summary, we claim that any generic function accessing recursive knots in the underlying datatype structure can be defined in the way described above for \texttt{subterms} task. We give another example showing how to adapt our idiom to different scenarios in the following subsection.
 
 \subsection{Generic show}
 \label{sec:gshow}
