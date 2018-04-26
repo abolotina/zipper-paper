@@ -356,16 +356,24 @@ Here is a benefit of our implementation: it can be used directly, without any ad
 This is a consequence of \texttt{gshow} from \textsf{basic-sop} not treating recursive positions separately, and therefore requiring the \texttt{Show} constraint for all knots in the datatype structure.
 
 
-\section{The generic Zipper}
+\section{The generic zipper}
 \label{sec:generic-zipper}
 
-The zipper is a data structure that enables efficient editing and navigation within the tree-like structure of a datatype by representing a current location in that structure. The location is a focus, which can be one of recursive nodes in the tree, along with its context that consists of surroundings of the focal subtree.
+The zipper is a data structure that enables efficient navigation and editing within the tree-like structure of a datatype. It  represents a current location in that structure, a \emph{focus}, storing a tree node along with its context. 
+%that consists of surroundings of the focal subtree.
 
-The classical zipper described by Huet~\cite{Huet1997} can be generically produced for regular datatypes~\cite{HiJeLo2004}, which are a subset of datatypes that can be viewed as a least fixed point of some polynomial expression on types. Yakushev~et~al.~\cite{MuRec2009} generalize the definition of the generic zipper for an arbitrary family of mutually recursive datatypes. Those known solutions require a datatype to be expressed using forms of a fixed-point operator, since the zipper operates on recursion points. Using closed type families, it is possible to define the generic zipper using a representation that does not exploit a fixed point. In this section, we implement the generic zipper interface that includes functions for manipulating locations for mutually recursive datatypes using the SOP view.
+The classical zipper described by Huet~\cite{Huet1997} can be generically calculated for regular datatypes~\cite{HiJeLo2004}---a subset of datatypes that can be viewed as a least fixed point of some polynomial expression on types. Yakushev~et~al.~\cite{MuRec2009} generalize the definition of the generic zipper for an arbitrary family of mutually recursive datatypes. All mentioned solutions require a datatype to be expressed using forms of a fixed-point operator, since the zipper operates on recursion points. 
+
+Our approach allows to define the generic zipper using a representation that does not exploit a fixed point. In this section, we implement the generic zipper interface that includes functions for manipulating locations for mutually recursive datatypes using the SOP view.
 
 \subsection{Interface and using}
 
-Having the location of the zipper, which holds the current focus on one of recursive knots in the structure---for the zipper for mutually recursive datatypes, this means recursion points of the total structure of a family---and its context, we may produce a new location by moving that focus up, down, left, or right. We are first going to show the generic zipper interface and an example of how it can be used, and then proceed to implement that interface. The interface we provide for using the generic zipper is displayed in Figure~\ref{fig:zipper-interface}. This comprises the functions for \emph{movement}, \emph{starting} and \emph{ending navigation}, and \emph{updating} the focus, which are defined over the location structure.
+Having a zipper focused on one of recursive knots in a structure, we may produce a new location by moving the focus up, down, left, or right.
+%for the zipper for mutually recursive datatypes, this means 
+%recursion points of the total structure of a family
+We start with the generic zipper interface for those operations and an example of how it can be used, then proceeding to the implementation.
+
+The interface we provide for the generic zipper is shown on Figure~\ref{fig:zipper-interface}. It comprises the functions for \emph{movement}, \emph{starting} and \emph{ending navigation}, and \emph{updating} the focus, which are defined over the location structure.
 \begin{figure}[t]
 \centering
 \normalsize
