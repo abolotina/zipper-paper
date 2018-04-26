@@ -198,7 +198,7 @@ We have introduced generic representation employed by the SOP library and are re
 \subsection{Problem with handling recursion}
 \label{sec:recursion-problem}
 
-Let us illustrate the problem by giving a short example. The \textsf{QuickCheck}~\cite{Claessen2011}, a library for automatic testing of Haskell code, using the \textsf{GHC.Generics} view, defines a helper function \texttt{subterms} that takes a term and obtains a list of all its immediate subterms that are of the same type as the given term, that is, all the recursive positions in the term structure. To implement such a function using the SOP view, we have to say something like this:
+We illustrate the problem through a short example. The \textsf{QuickCheck} library~\cite{Claessen2011} for automatic testing of Haskell code defines a helper function \texttt{subterms} that takes a term and obtains a list of all its immediate subterms that are of the same type as the given term, that is, all the recursive positions in the term structure. We reimplement this function using the SOP view:
 \texttt{
 \vs
 \indent subterms \ann Generic a \Ra a \ra [a]\\
@@ -217,11 +217,9 @@ Let us illustrate the problem by giving a short example. The \textsf{QuickCheck}
 }
 The function \texttt{subterms} translates the term to its representation unwrapping the sum of products from \texttt{SOP} and passes that to the auxiliary function \texttt{subtermsNS} that merely traverses the sum until it reaches the product. Once it gets the product, it passes that further to \texttt{subtermsNP}.
 
-The definition of \texttt{subtermsNP} shows the clear idea: it traverses the product adding the element to the result list if its type is the same as a given term's, otherwise skipping that. We use GHC's \textsf{TypeAppications} extension, which allows \emph{visible type applications}, here to fix that type. Note that using this with the type variables appearing in the function signature requires explicit universal quantification.
+The algorithm of \texttt{subtermsNP} is straightforward---it traverses the product appending current element to the result list if its type is the same as the given term's, otherwise skipping the element. We use GHC's \textsf{TypeAppications} extension to pass that type.
 
-Now, we need a way to check type equality, and in the case of equal types, to witness that the element is of the appropriate type that admits adding that to the result list of subterms. There is a solution: we can follow \textsf{QuickCheck}'s example and implement this using overlapping instances as it does with \textsf{GHC.Generics}.
-
-The definition of \texttt{subtermsNP} we have shown serves as a clear illustration of the idea and as a template for a more satisfactory solution that we present in Section~\ref{sec:handling-recursion}. But right now, the simplest way to implement this is to rewrite \texttt{subtermsNP} as follows:
+Now, we need a way to check type equality and, in the case of equal types, to witness that the element is of the desired type. There is no clear path to this at the moment. Therefore, we step back and follow the \textsf{QuickCheck}'s example\footnote{The \textsf{QuickCheck} library applies another approach to generic programming, namely \textsf{GHC.Generics}.} using overlapping instances of a dedicated class instead.
 \texttt{
 \vs
 \indent\textbf{class} Subterms a (xs \ann [*]) \textbf{where}\\
@@ -236,7 +234,8 @@ The definition of \texttt{subtermsNP} we have shown serves as a clear illustrati
 \indent\s\s subtermsNP \_ = []
 \vs
 }
-This uses a type class with the overloaded function. It needs also to declare that all the products in the datatype code are instances of \texttt{Subterms a} by adding a constraint to the \texttt{subterms} and \texttt{subtermsNS} signatures:
+
+To make the whole solution work we need to propagate the constraints all the way through \texttt{subtermsNS} and \texttt{subterms} signatures:
 \texttt{
 \vs
 \indent subterms\s\s\s \ann\hs (Generic a, All (Subterms a) (Code a))\\
@@ -246,7 +245,7 @@ This uses a type class with the overloaded function. It needs also to declare th
 \vspace{0.2cm}
 }
 
-Though this will work, and there are a number of the Hackage packages that do it in such a manner, we want to write programs free of overlap because of complexity it introduces into code as we have discussed in Section~\ref{sec:introduction}. Fortunately, we can do without overlap, and we will demonstrate the solution in the next section.
+Although, the approach works as exemplified by a number of the packages on Hackage, we aim for release of generic programs from overlap. That would avoid the complexity ovehead introduced by the approach, as we have noted in the introduction.
 
 
 \section{Handling recursion with closed type families}
