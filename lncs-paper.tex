@@ -183,11 +183,11 @@ With the \texttt{NS} and \texttt{NP} machinery at hand, SOP defines the \texttt{
 \indent\s\s to\s\s\s \ann Rep a \ra a
 \vs
 }
-The sum of products type, \texttt{SOP f}, is a newtype-wrapper for \texttt{NS (NP f)}, and the structural representation \texttt{Rep} of a datatype \texttt{a} is a type synonym for a \texttt{SOP I} of \texttt{a}'s code. The functions \texttt{from} and \texttt{to} perform a shallow conversion of the datatype topmost layer---it does not recursively translate the constructor arguments.
+The sum of products type, \texttt{SOP f}, is a newtype-wrapper for \texttt{NS (NP f)}, and the structural representation \texttt{Rep} of a datatype \texttt{a} is a type synonym for a \texttt{SOP I} of \texttt{a}'s code. The functions, \texttt{from} and \texttt{to}, perform a shallow conversion of the datatype topmost layer---they does not recursively translate the constructor arguments.
 
-We are leaving out discussion of the \texttt{All SListI} constraint in the \texttt{Generic} class definition as irrelevant to our work. Although, we do use \texttt{All} constraint combinator in the following. Therefore, it is worth noting that \texttt{All} applies particular constraint (e.g. \texttt{SListI} above) to each member of a list of types. The usage of constraints as type arguments is allowed due to \textsf{ConstraintKinds} language extension introducing a dedicated kind \texttt{Constraint}.
+We leave out discussion of the \texttt{SListI} constraint in the \texttt{Generic} class definition as irrelevant to our work. Although, we do use \texttt{All} constraint combinator (as in \texttt{All SListI}) in the following. Therefore, it is worth noting that \texttt{All} applies a particular constraint (e.g. \texttt{SListI} above) to each member of a list of types. The usage of constraints as type arguments is allowed due to \textsf{ConstraintKinds} language extension introducing a dedicated kind \texttt{Constraint}.
 
-We have introduced generic representation employed by the SOP library and are ready to describe the problem of handling recursion points stemming from the representation. 
+We have introduced generic representation employed by the SOP library and are ready to describe the problem of handling recursion points, stemming from the representation. 
 
 \subsection{Problem with handling recursion}
 \label{sec:recursion-problem}
@@ -209,11 +209,11 @@ We illustrate the problem through a short example. The \textsf{QuickCheck} libra
 \indent subtermsNP \_ Nil = []
 \vs
 }
-The function \texttt{subterms} translates the term to its representation unwrapping the sum of products from \texttt{SOP} and passes that to the auxiliary function \texttt{subtermsNS} that merely traverses the sum until it reaches the product. Once it gets the product, it passes that further to \texttt{subtermsNP}.
+The function \texttt{subterms} translates the term to its representation, unwrapping the sum of products from \texttt{SOP}, and passes that to the auxiliary function \texttt{subtermsNS}. The latter merely traverses the sum and, once reaches the product,  passes it further to \texttt{subtermsNP}.
 
-The algorithm of \texttt{subtermsNP} is straightforward---it traverses the product appending current element to the result list if its type is the same as the given term's, otherwise skipping the element. We use GHC's \textsf{TypeAppications} extension to pass that type.
+The algorithm of \texttt{subtermsNP} is straightforward---it traverses the product, appending current element to the result list if its type is the same as of the term \texttt{t}, otherwise skipping the element. We use GHC's \textsf{TypeAppications} extension to pass that type.
 
-Now, we need a way to check type equality and, in the case of equal types, to witness that the element is of the desired type. There is no clear path to this at the moment. Therefore, we step back and follow the \textsf{QuickCheck}'s example\footnote{The \textsf{QuickCheck} library applies another approach to generic programming, namely \textsf{GHC.Generics}.} using overlapping instances of a dedicated class instead.
+Now, we need a way to check type equality and, in the case of equal types, to witness that the element is of the desired type. There is no clear path to this at the moment. Therefore, we step back (until Section~\ref{subsec:solve-subtermnp}) and, to implement \texttt{subtermNP}, follow the \textsf{QuickCheck}'s example\footnote{The \textsf{QuickCheck} library applies another approach to generic programming, namely \textsf{GHC.Generics}.}, using overlapping instances of a dedicated class instead.
 \texttt{
 \vs
 \indent\textbf{class} Subterms a (xs \ann [*]) \textbf{where}\\
@@ -229,7 +229,7 @@ Now, we need a way to check type equality and, in the case of equal types, to wi
 \vs
 }
 
-To make the whole solution work we need to propagate the constraints all the way through \texttt{subtermsNS} and \texttt{subterms} signatures:
+To make the whole solution work, we need to propagate the constraints all the way through \texttt{subtermsNS} and \texttt{subterms} signatures:
 \texttt{
 \vs
 \indent subterms\s\s\s \ann\hs (Generic a, All (Subterms a) (Code a))\\
@@ -239,7 +239,7 @@ To make the whole solution work we need to propagate the constraints all the way
 \vspace{0.2cm}
 }
 
-Although, the approach works as exemplified by a number of the packages on Hackage, we aim for release of generic programs from overlap. That would avoid the complexity ovehead introduced by the approach, as we have noted in the introduction.
+Although, the approach works, as exemplified by a number of the packages on Hackage, we aim for release of generic programs from overlap. This would remove the complexity overhead introduced by the approach, as we have mentioned in the introduction.
 
 
 \section{Handling recursion with closed type families}
@@ -258,7 +258,8 @@ Closed type families are the Haskell language extension introduced by Eisenberg 
 }
 The equations in a closed type family are matched in a top-to-bottom order. Since the order is fixed, the overlapping equations here cannot be used to define unsound type-level equations.
 
-\subsection{Solution to \texttt{subterms} revised}
+\subsection{Solution to \texttt{subtermsNP} revised}
+\label{subsec:solve-subtermnp}
 
 We now return to our running example from Section~\ref{sec:recursion-problem}. With the type equality, we can witness the coercion between the equal types by defining a type class:
 \texttt{
