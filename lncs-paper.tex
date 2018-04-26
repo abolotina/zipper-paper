@@ -60,7 +60,7 @@ Czech Technical University in Prague, Prague, Czech Republic\\
 \maketitle              % typeset the header of the contribution
 %
 \begin{abstract}
-Many of the extensively used libraries for datatype-generic programming offer a fixed-point view on datatypes to express a recursive structure. Some approaches based on sums of products, however, do not use a fixed point. Those views therefore allow for generic functions that do not require to look at the recursive knots in a datatype representation, but raise issues when it needs to deal with recursion. A known and unwelcome solution is the use of overlapping instances. We present an approach that uses closed type families to eliminate the need of overlap for handling recursion. Moreover, we show that our idiom allows for families of mutually recursive datatypes.
+Many of the extensively used libraries for datatype-generic programming offer a fixed-point view on datatypes to express their recursive structure. However, some approaches, based on sums of products, do not use a fixed point. They allow for generic functions that do not require to look at the recursive knots in a datatype representation, but raise issues otherwise. A known and unwelcome solution is the use of overlapping instances. We present an alternative approach that uses closed type families to eliminate the need of overlap for handling recursion in datatypes. Moreover, we show that our idiom allows for families of mutually recursive datatypes.
 
 %The \textsf{generics-sop} library is an approach to representing data using $n$-ary sums and products that both are list-like structures, which is different from the classical view where datatypes are expressed by separate binary sums and products, and it does not encode recursive knots explicitly as with the fixed-point view. We choose this approach as a case study to demonstrate our solution.
 
@@ -72,21 +72,21 @@ Many of the extensively used libraries for datatype-generic programming offer a 
 \section{Introduction}
 \label{sec:introduction}
 
-A classical way to generically express a datatype is to represent its constructors as the chains of nested binary sums, and turn constructor arguments into the chains of nested binary products~\cite{VanNoort2008,Cheney2002,Loeh2004}\nocite{Rodriguez2008}\nocite{Magalhaes2012}. De Vries and L\"{o}h~\cite{VriLoeh2014} describe a different sum-of-products approach to representing data using $n$-ary sums and products that both are lists of types, a sum of products is thus a list of lists of types. They call their view SOP which stands for a ``sum of products''---this is implemented in the \textsf{generics-sop}~\cite{generics-sop} library and is based on several relatively recent extensions to the Haskell type system, such as \emph{data kinds}, \emph{kind polymorphism}~\cite{Yorgey2012} and \emph{constraint kinds}.
+A classical way to generically express a datatype is to represent its constructors as the chains of nested \emph{binary} sums, and turn constructor arguments into the chains of nested \emph{binary} products~\cite{VanNoort2008,Cheney2002,Loeh2004}\nocite{Rodriguez2008}\nocite{Magalhaes2012}. De Vries and L\"{o}h~\cite{VriLoeh2014} describe a different sum-of-products approach to representing data using $n$-ary sums and products that are both lists of types; a sum of products is thus a list of lists of types. They call their view SOP which stands for a ``sum of products''. It is implemented in the \textsf{generics-sop}~\cite{generics-sop} library and is based on several relatively recent extensions to the Haskell type system, such as \emph{data kinds}, \emph{kind polymorphism}~\cite{Yorgey2012} and \emph{constraint kinds}.
 %, and \emph{GADTs}~\cite{Schrijvers2009}. -- very old extension, 2003 approx.
-Using these Haskell features, the library provides the generic view and equips it with a rich collection of high-level combinators, such as for constructing sums and products, collapsing to homogeneous structures, and application, which are an expressive instrument for defining generic functions in a more succinct and high-level style compared to the classical binary sum-of-products views.
+Using these Haskell features, the library provides the generic view and equips it with a rich collection of high-level combinators, such as ones for constructing sums and products, collapsing to homogeneous structures, and others. They form an expressive instrument for defining generic functions in a more succinct and high-level style as compared to the classical binary sum-of-products views.
 
-There are many generic functions that deal with the recursive knots, when traverse the structure of datatypes. Some of the most general examples are \emph{maps}~\cite{Magalhaes2010} and \emph{folds}~\cite{Meijer1991}, more advanced one is a \emph{zipper}~\cite{Huet1997,HiJeLo2004,Adams2010}. For handling recursion, several generic programming approaches express datatypes in the form of polynomial functors closed under fixed points~\cite{MuRec2009,Jansson1997,Loeh2011}. The SOP view naturally supports definitions of functions that do not require a knowledge about recursive occurrences, but otherwise it yields. 
+There are many generic functions that deal with the recursive knots when traversing the structure of datatypes. Some of the most general examples are \emph{maps}~\cite{Magalhaes2010} and \emph{folds}~\cite{Meijer1991}; more advanced one is a \emph{zipper}~\cite{Huet1997,HiJeLo2004,Adams2010}. For handling recursion, several generic programming approaches express datatypes in the form of polynomial functors closed under fixed points~\cite{MuRec2009,Jansson1997,Loeh2011}. The SOP view naturally supports definitions of functions that do not require a knowledge about recursive occurrences, but otherwise becomes unhandy.
 
-One possible solution to the aforementioned shortcoming of SOP is to modify the SOP core by explicitly encoding recursive positions using the fixed-point approach. This may complicate the whole framework significantly. Besides, such a decision may lead to extra conversions between the generic views.
+One possible solution to the aforementioned shortcoming of SOP is to modify the its core by explicitly encoding recursive positions using the fixed-point approach. However, this may complicate the whole framework significantly. Besides, such a decision may lead to extra conversions between the generic views.
 
-Another known solution uses overlapping instances. This usually unwelcome Haskell extension complicates reasoning about the semantics of code. In particular, the program behavior becomes unstable for it can be affected by any module defining more specific instances. Morris and Jones~\cite{Morris2010} extensively discuss the problems arising from overlapping instances.
+Another known solution uses overlapping instances. This, usually unwelcome, Haskell extension complicates reasoning about the semantics of code. In particular, the program behavior becomes unstable, for it can be affected by any module defining more specific instances. Morris and Jones~\cite{Morris2010} extensively discuss the problems arising from overlapping instances.
 % and introduce the type system \textsf{ilab} with a feature called \emph{instance chains} that advances control of overlap. 
-The overlap problem also strikes in the security setting when code is compiled as \texttt{-XSafe} for GHC does not reflect unsafe overlaps and marks the module as safe~\cite{sh-overlapping}.
+The overlap problem also strikes in the security setting when code is compiled as \texttt{-XSafe} because GHC does not reflect unsafe overlaps and marks the module as safe~\cite{sh-overlapping}.
 %Kiselyov et al.~\cite{Kiselyov2004} show how to localize overlap for access operations in a systematic way. Using \textit{closed type families}~\cite{Eisenberg2014}, we introduce an idiom that allows us to completely eliminate overlap for handling recursion.
 % -- this should go to Realted Work (if stays in the paper at all)
 
-We feel both existing approaches unsatisfactory and make the following contributions:
+We feel both existing approaches unsatisfactory and make the following contributions.
 \begin{itemize}
 \item We describe the problem with the current approach of SOP in detail (Section~\ref{sec:sop-problem}).
 \item We introduce an idiom that overcomes the problem. The approach avoids both, the use of overlapping instances and changing a generic representation. (Section~\ref{sec:handling-recursion})
@@ -94,21 +94,15 @@ We feel both existing approaches unsatisfactory and make the following contribut
 %\item We provide a convenient interface for generic functions: there is no need to manually declare type class instances for using them.
 % -- this doesn't sound like a contribution
 \item We evaluate our approach through the development of a larger-scale use case---the generic zipper. The zipper is meant to be easily and flexibly used with families of mutually recursive datatypes (Section~\ref{sec:generic-zipper}).
-\item We note, that our approach can contribute to the \textsf{generics-sop}'s one eliminating some boilerplate instance declarations which necessarily  arise in practice as a consequence of absence of information about recursion points. An example of that, taken from the \textsf{basic-sop}~\cite{basic-sop} package, is discussed in Section~\ref{sec:gshow}.
+\item We note, that our approach can contribute to the \textsf{generics-sop}'s one eliminating some boilerplate instance declarations, which necessarily  arise in practice as a consequence of absence of information about recursion points. An example of that, taken from the \textsf{basic-sop}~\cite{basic-sop} package, is discussed in Section~\ref{sec:gshow}.
 \end{itemize}
 
-We believe that our idea is suitable for any sum-of-products approach that do not exploit a fixed point view and thus subject to the problem. We choose the \textsf{generics-sop} approach as a case study because it appears to be a widely applicable library and builds on powerful language extensions implemented in GHC.
-
-
-%\paragraph{Organization} The paper is organized as follows. In Section~\ref{sec:sop-problem}, we introduce the SOP view concepts and demonstrate the problem by a short example. In Section~\ref{sec:handling-recursion}, we show our solution using closed type families and accompany it with one more example of a generic function adapting the idea. In Section~\ref{sec:generic-zipper}, we present an advanced example of the generic zipper for mutually recursive datatypes. In Section~\ref{sec:related-work}, we review related work, and we conclude in Section~\ref{sec:conclusion}.
-%
-% Organization part is not used these days (cf. any of the later papers by SPJ)
-% Instead, the Sec.-references are integrated into the Contributions part.
+We believe that our idea is suitable for any sum-of-products approach that do not exploit the fixed point view and thus subject to the problem. We choose the \textsf{generics-sop} approach as a case study because it appears to be a widely applicable library and builds on powerful language extensions implemented in GHC.
 
 \section{The SOP universe and the problem}
 \label{sec:sop-problem}
 
-In this section, we first review the SOP view on data describing its basic concepts to introduce the terminology we are using. Then we discuss the problem with handling recursion by generic functions and illustrate it with a short example.
+In this section, we first review the SOP view on data, describing its basic concepts to introduce the terminology we are using. Then we discuss the problem with handling recursion by generic functions and illustrate it with a short example.
 
 \subsection{The SOP view}
 \label{sec:sop-view}
@@ -153,8 +147,9 @@ This datatype is isomorphic to the following code:
 %A type of promoted lists has no inhabitants, so the universe provides datatypes to operate on $n$-ary sums and products as on terms.
 % -- this sentence falls out of the flow of the paragraph
 
-As shown in Figure~\ref{fig:ns-np}, the datatypes \texttt{NS} for an $n$-ary sum and \texttt{NP} for an $n$-ary product are defined as GADTs and are \emph{indexed}~\cite{HiJeLo2004} by a promoted list of types. The encoding also holds an auxiliary type constructor \texttt{f} (typically, a functor) which is meant to be applied to every element of the index list. Therefore, \texttt{NP} is a tiny abstraction of a usual definition of a heterogeneous list The definitions of \texttt{NS} and \texttt{NP} are kind polymorphic. The index list allows to contain types of arbitrary kind \texttt{k}, since \texttt{k} turns to \texttt{*} by applying the type constructor \texttt{f}.
+As shown in Figure~\ref{fig:ns-np}, the datatypes \texttt{NS} for an $n$-ary sum and \texttt{NP} for an $n$-ary product are defined as GADTs and are \emph{indexed}~\cite{HiJeLo2004} by a promoted list of types. The encoding also holds an auxiliary type constructor \texttt{f} (typically, a functor) which is meant to be applied to every element of the index list. Therefore, \texttt{NP} is a modest abstraction over a heterogeneous list. 
 
+The definitions of \texttt{NS} and \texttt{NP} are kind polymorphic. The index list is allowed to contain types of arbitrary kind \texttt{k}, since \texttt{k} turns to \texttt{*} by applying the type constructor \texttt{f}.
 Basic instantiations of type parameter \texttt{f} found in SOP are identity functor \texttt{I}, that is, a type-level equivalent for \texttt{id} function, and a constant functor \texttt{K}, an analogue of \texttt{const}:
 \texttt{
 \vs
@@ -162,8 +157,7 @@ Basic instantiations of type parameter \texttt{f} found in SOP are identity func
 \indent\textbf{newtype} K (a \ann *) (b \ann k) = K \{unK \ann a\}
 \vs
 }
-
-If instantiated with \texttt{I}, \texttt{NP} is a plain heterogeneous list of types, while \texttt{K a} turns it into homogeneous one. Here is an example value of \texttt{NP I}:
+If instantiated with \texttt{I}, \texttt{NP} is a plain heterogeneous list, while \texttt{K a} turns it into a homogeneous one, isomorphic to \texttt{[a]}. Here is an example value of type \texttt{NP I}:
 \texttt{
 \vs
 \indent I 5 :* I True :* I 'x' :* Nil \ann NP I '[Int, Bool, Char]
@@ -173,7 +167,7 @@ If instantiated with \texttt{I}, \texttt{NP} is a plain heterogeneous list of ty
 We turn to the sum definition now. The constructor \texttt{S} of \texttt{NS}, given an index in $n$-element list, results in an index in a list with $n+1$ elements, skipping the first one, while \texttt{Z} stores the payload of type \texttt{f x}. For example, the following chooses the third element of a sum:
 \texttt{
 \vs
-\indent S (S (Z (I 3))) \ann NS I '[Char, Bool, Int, Bool]
+\indent S (S (Z (I 5))) \ann NS I '[Char, Bool, Int, Bool]
 \vs
 }
 The sum constructors are similar to Peano numbers, so the choice from a sum of products of a datatype matches the index of its particular constructor in the index list and stores the product representing arguments of that constructor.
