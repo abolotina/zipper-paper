@@ -307,9 +307,9 @@ In summary, we claim that any generic function accessing recursive knots in the 
 \subsection{Generic show}
 \label{sec:gshow}
 
-The function \texttt{show} is one of common examples of useful functions that traverse a datatype's recursive structure. It is known that this function can be defined in a generic way for an arbitrary datatype. De Vries and L\"{o}h define the generic function \texttt{gshow} in the \textsf{basic-sop}~\cite{basic-sop} package based on the SOP view. We follow their implementation of \texttt{gshow} for the most part, but improve it in respect of handling recursion. The original function \texttt{gshow} from \textsf{basic-sop} is not a substitute for the version of \texttt{show} that can be generated for a particular datatype through \texttt{\textbf{deriving} Show}, because it does not consider recursion to place parentheses at points of recursive calls---but we remove this lack of expressiveness.
+The function \texttt{show} is a common example of useful functions that traverse a datatype's recursive structure. It is known that this function can be defined in a generic way for an arbitrary datatype. De Vries and L\"{o}h define generic function \texttt{gshow} in the \textsf{basic-sop} package~\cite{basic-sop} based on the SOP view. We follow their implementation of \texttt{gshow} for the most part, but improve it in respect of handling recursion. The original \texttt{gshow} yields to the standard \texttt{show} generated through \texttt{\textbf{deriving} Show}, because it does not consult with recursion points to place parentheses. We eliminate this drawback.
 
-The following exploits the idea of \emph{pattern matching}. As before, we consider two cases. In the first case when the position we are matching is not recursive, we only require it to be the \texttt{Show} instance, and invoke its \texttt{show}, whereas in the case of the recursion point, we surround it with parentheses and apply our generic function \texttt{gshow}. We again use the defined type equality to model a form of pattern matching on types:
+The following exploits the idea of \emph{pattern matching}. As before, we consider two cases. In the first case, when the position we are matching on is not recursive, we only require it to be an  instance of \texttt{Show}, and invoke its \texttt{show} function. Whereas in the case of recursion point, we surround it with parentheses and apply our generic function \texttt{gshow}. Thus, the type family for equality model a form of pattern matching on the types again:
 \texttt{
 \vs
 \indent\textbf{class} CaseShow (eq \ann Bool) (a \ann *) (b \ann *) \textbf{where}\\
@@ -321,7 +321,7 @@ The following exploits the idea of \emph{pattern matching}. As before, we consid
 \indent\s\s caseShow' t = "(" ++ gshow t ++ ")"
 \vs
 }
-We provide the synonym for the \texttt{CaseShow (Equal a b) a b} instance, which we call \texttt{CaseRecShow}, in the same way as before, as well as the synonym for the matching function:
+We provide a synonym for the \texttt{CaseShow (Equal a b) a b} instance, which we call \texttt{CaseRecShow}, as before with \texttt{ProofEq}; likewise the synonym for the matching function:
 \texttt{
 \vs
 \indent caseShow \ann \fa a b. CaseRecShow a b \Ra b \ra String\\
@@ -329,7 +329,7 @@ We provide the synonym for the \texttt{CaseShow (Equal a b) a b} instance, which
 \vspace{0.2cm}
 }
 
-The function \texttt{gshow} involves meta-information provided by \textsf{generics-sop}'s class \texttt{HasDatatypeInfo} to show a datatype constructor's and its record fields' names. The \textsf{generics-sop} library has features for deriving this meta-information automatically.
+The resulting function \texttt{gshow} is a subject of a number of constraints abbreviated by \texttt{GShow} synonym:
 \texttt{
 \vs
 \indent\textbf{type} GShow a = (Generic a, HasDatatypeInfo a,\\
@@ -338,9 +338,12 @@ The function \texttt{gshow} involves meta-information provided by \textsf{generi
 \indent gshow \ann \fa a. GShow a \Ra a \ra String
 \vs
 }
-We define \texttt{gshow} mutually recursive with \texttt{caseShow}. The function is constrained by \texttt{CaseRecShow} with the \texttt{All2} combinator that is an analogue of \texttt{All} for a list of lists of types. The full implemenentation of the function \texttt{gshow} using \texttt{caseShow} is given in the extended version of the paper in Technical Report\footnote{\url{https://users.fit.cvut.cz/~pelenart/2018-generic-zipper-tr.pdf}}.
+The function \texttt{gshow} employs metadata provided by \textsf{generics-sop}'s class \texttt{Has\-Datatype\-Info} to show the names of a datatype constructor and its record fields. The \textsf{generics-sop} library is able to derive this metadata automatically.
+The function is also constrained by \texttt{CaseRecShow} with the \texttt{All2} combinator that is an analogue of \texttt{All} for a list of lists of types. 
 
-The function \texttt{gshow} can now be used to generically show data, for example, a value of type \texttt{Tree~Bool}, where \texttt{Tree~a} (Section~\ref{sec:sop-view}) is now assumed to be an instance of \texttt{Generic}, and of \texttt{HasDatatypeInfo}:
+We define \texttt{gshow} mutually recursive with \texttt{caseShow}. The full implemenentation of the function \texttt{gshow} is left for the extended version of the paper in Technical Report\footnote{\url{https://users.fit.cvut.cz/~pelenart/2018-generic-zipper-tr.pdf}}.
+
+The function \texttt{gshow} can now be used to generically show data---for example, a value of type \texttt{Tree~Bool}; note that \texttt{Tree~a} from Section~\ref{sec:sop-view} is now assumed to be an instance of \texttt{Generic} and \texttt{HasDatatypeInfo}.
 \texttt{
 \vs
 \indent *Main> \textbf{let} tree = Node (Leaf True) (Leaf False)\\
@@ -349,14 +352,14 @@ The function \texttt{gshow} can now be used to generically show data, for exampl
 \indent "Node (Leaf True) (Leaf False)"
 \vs
 }
-And here is a benefit of our implementation: it can be used directly, without any additional instance declarations, whereas \textsf{basic-sop}~\cite{basic-sop} offers the following usage pattern for \texttt{gshow} and some datatype \texttt{T}:
+Here is a benefit of our implementation: it can be used directly, without any additional instance declarations, whereas \textsf{basic-sop}~\cite{basic-sop} offers the following usage pattern for \texttt{gshow} and some datatype \texttt{T}:
 \texttt{
 \vs
 \indent\textbf{instance} Show T \textbf{where}\\
 \indent\s\s show = gshow
 \vs
 }
-This is a consequence of that in \textsf{basic-sop}, the \texttt{gshow} function does not treat recursive positions separately, and therefore requires the \texttt{Show} constraint for all knots in the datatype structure.
+This is a consequence of \texttt{gshow} from \textsf{basic-sop} not treating recursive positions separately, and therefore requiring the \texttt{Show} constraint for all knots in the datatype structure.
 
 
 \section{The generic Zipper}
