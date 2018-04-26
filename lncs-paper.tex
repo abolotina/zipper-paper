@@ -249,9 +249,9 @@ Though this will work, and there are a number of the Hackage packages that do it
 \label{sec:handling-recursion}
 
 
-In the previous section, we have shown a solution to the problem of handling recursion, which makes use of overlapping instances. We are now going to improve the solution and remove overlap.
+In the previous section, we have shown a solution to the problem of handling recursion, which makes use of overlapping instances. We are going to improve the solution and remove overlap now.
 
-Closed type families are the Haskell language extension introduced by Eisenberg et al.~\cite{Eisenberg2014}. Equations for the \emph{closed type family} are disallowed to de defined outside its declaration. Under this extension, we can give the following definition of type-level equality:
+Closed type families are the Haskell language extension introduced by Eisenberg et al.~\cite{Eisenberg2014}. The main idea of the extension being that he equations for a \emph{closed type family} are disallowed outside its declaration. Under the extension, we can give the following definition of a type-level equality:
 \texttt{
 \vs
 \indent\textbf{type family} Equal a x \ann Bool \textbf{where}\\
@@ -259,9 +259,11 @@ Closed type families are the Haskell language extension introduced by Eisenberg 
 \indent\s\s Equal a x = 'False
 \vs
 }
-The equations in a closed type family are matched in a top-to-bottom order. Since the order is always strictly defined, overlapping equations can be used to define sound type-level functions like this type equality.
+The equations in a closed type family are matched in a top-to-bottom order. Since the order is fixed, the overlapping equations here cannot be used to define unsound type-level equations.
 
-We now return to our running example from Section~\ref{sec:recursion-problem}. With type equality, we can witness the coersion between the equal types by defining a type class:
+\subsection{Solution to \texttt{subterms} revised}
+
+We now return to our running example from Section~\ref{sec:recursion-problem}. With the type equality, we can witness the coercion between the equal types by defining a type class:
 \texttt{
 \vs
 \indent\textbf{class} Proof (eq \ann Bool) (a \ann *) (b \ann *) \textbf{where}\\
@@ -273,14 +275,15 @@ We now return to our running example from Section~\ref{sec:recursion-problem}. W
 \indent\s\s witnessEq\s\s\s = Just
 \vs
 }
-We then need to provide the proof for all elements in \texttt{NP}. This can be done by means of the \texttt{All} combinator. For using that, we need the constraint can be partially applied, and so use a synonym for \texttt{Proof (Equal a b) a b} that we define as a class with a superclass constraint, rather than as a type synonym:
+
+For every element in a list of all direct subterms of a term we shall provide a proof object witnessing its type (in)equality to the type of the term. This can be done by means of the \texttt{All} combinator and partially applied auxiliary type class \texttt{ProofEq} which abbreviates heavy-weighted interface of \texttt{Proof}:
 \texttt{
 \vs
 \indent\textbf{class}\ind Proof (Equal a b) a b \Ra ProofEq a b\\
 \indent\textbf{instance} Proof (Equal a b) a b \Ra ProofEq a b
 \vs
 }
-The following implementation of \texttt{subtermsNP} using this proof resembles our first definition given in the previous section:
+Resulting implementation of \texttt{subtermsNP} resembles our first definition given in the previous section:
 \texttt{
 \vs
 \indent subtermsNP \ann \fa a xs. All (ProofEq a) xs \Ra NP I xs \ra [a]\\
@@ -291,9 +294,12 @@ The following implementation of \texttt{subtermsNP} using this proof resembles o
 \indent subtermsNP \_ Nil = []
 \vs
 }
-We also make use of \textsf{ScopedTypeVariables} in the definition above, as the type of the element being matched does not appear in the function signature, since it may match an empty list. A proper \texttt{ProofEq} constraint must be added to the \texttt{subterms} and \texttt{subtermsNS} declarations as well.
 
-All generic functions accessing recursive knots in the underlying datatype structure can be defined in this way. We give another detailed example of one of such functions to show how to adapt our idiom to different scenarios.
+As a side note, we make use of \textsf{ScopedTypeVariables} extension in the definition above, as the type of the element being matched does not appear in the function signature, since it may match an empty list. 
+
+To complete the solution of the problem, the \texttt{ProofEq} constraint must be added to the \texttt{subterms} and \texttt{subtermsNS} declarations as well.
+
+In summary, we claim that any generic function accessing recursive knots in the underlying datatype structure can be defined in the way described above for \texttt{subterms} task. We give another example showing how to adapt our idiom to different scenarios in the following section.
 
 \subsection{Generic show}
 \label{sec:gshow}
