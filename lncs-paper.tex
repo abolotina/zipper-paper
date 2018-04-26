@@ -183,11 +183,11 @@ With the \texttt{NS} and \texttt{NP} machinery at hand, SOP defines the \texttt{
 \indent\s\s to\s\s\s \ann Rep a \ra a
 \vs
 }
-The sum of products type, \texttt{SOP f}, is a newtype-wrapper for \texttt{NS (NP f)}, and the structural representation \texttt{Rep} of a datatype \texttt{a} is a type synonym for a \texttt{SOP I} of \texttt{a}'s code. The functions \texttt{from} and \texttt{to} perform a shallow conversion of the datatype topmost layer---it does not recursively translate the constructor arguments.
+The sum of products type, \texttt{SOP f}, is a newtype-wrapper for \texttt{NS (NP f)}, and the structural representation \texttt{Rep} of a datatype \texttt{a} is a type synonym for a \texttt{SOP I} of \texttt{a}'s code. The functions, \texttt{from} and \texttt{to}, perform a shallow conversion of the datatype topmost layer---they does not recursively translate the constructor arguments.
 
-We are leaving out discussion of the \texttt{All SListI} constraint in the \texttt{Generic} class definition as irrelevant to our work. Although, we do use \texttt{All} constraint combinator in the following. Therefore, it is worth noting that \texttt{All} applies particular constraint (e.g. \texttt{SListI} above) to each member of a list of types. The usage of constraints as type arguments is allowed due to \textsf{ConstraintKinds} language extension introducing a dedicated kind \texttt{Constraint}.
+We leave out discussion of the \texttt{SListI} constraint in the \texttt{Generic} class definition as irrelevant to our work. Although, we do use \texttt{All} constraint combinator (as in \texttt{All SListI}) in the following. Therefore, it is worth noting that \texttt{All} applies a particular constraint (e.g. \texttt{SListI} above) to each member of a list of types. The usage of constraints as type arguments is allowed due to \textsf{ConstraintKinds} language extension introducing a dedicated kind \texttt{Constraint}.
 
-We have introduced generic representation employed by the SOP library and are ready to describe the problem of handling recursion points stemming from the representation. 
+We have introduced generic representation employed by the SOP library and are ready to describe the problem of handling recursion points, stemming from the representation. 
 
 \subsection{Problem with handling recursion}
 \label{sec:recursion-problem}
@@ -209,11 +209,11 @@ We illustrate the problem through a short example. The \textsf{QuickCheck} libra
 \indent subtermsNP \_ Nil = []
 \vs
 }
-The function \texttt{subterms} translates the term to its representation unwrapping the sum of products from \texttt{SOP} and passes that to the auxiliary function \texttt{subtermsNS} that merely traverses the sum until it reaches the product. Once it gets the product, it passes that further to \texttt{subtermsNP}.
+The function \texttt{subterms} translates the term to its representation, unwrapping the sum of products from \texttt{SOP}, and passes that to the auxiliary function \texttt{subtermsNS}. The latter merely traverses the sum and, once reaches the product,  passes it further to \texttt{subtermsNP}.
 
-The algorithm of \texttt{subtermsNP} is straightforward---it traverses the product appending current element to the result list if its type is the same as the given term's, otherwise skipping the element. We use GHC's \textsf{TypeAppications} extension to pass that type.
+The algorithm of \texttt{subtermsNP} is straightforward---it traverses the product, appending current element to the result list if its type is the same as of the term \texttt{t}, otherwise skipping the element. We use GHC's \textsf{TypeAppications} extension to pass that type.
 
-Now, we need a way to check type equality and, in the case of equal types, to witness that the element is of the desired type. There is no clear path to this at the moment. Therefore, we step back and follow the \textsf{QuickCheck}'s example\footnote{The \textsf{QuickCheck} library applies another approach to generic programming, namely \textsf{GHC.Generics}.} using overlapping instances of a dedicated class instead.
+Now, we need a way to check type equality and, in the case of equal types, to witness that the element is of the desired type. There is no clear path to this at the moment. Therefore, we step back (until Section~\ref{subsec:solve-subtermnp}) and, to implement \texttt{subtermNP}, follow the \textsf{QuickCheck}'s example\footnote{The \textsf{QuickCheck} library applies another approach to generic programming, namely \textsf{GHC.Generics}.}, using overlapping instances of a dedicated class instead.
 \texttt{
 \vs
 \indent\textbf{class} Subterms a (xs \ann [*]) \textbf{where}\\
@@ -229,7 +229,7 @@ Now, we need a way to check type equality and, in the case of equal types, to wi
 \vs
 }
 
-To make the whole solution work we need to propagate the constraints all the way through \texttt{subtermsNS} and \texttt{subterms} signatures:
+To make the whole solution work, we need to propagate the constraints all the way through \texttt{subtermsNS} and \texttt{subterms} signatures:
 \texttt{
 \vs
 \indent subterms\s\s\s \ann\hs (Generic a, All (Subterms a) (Code a))\\
@@ -239,16 +239,16 @@ To make the whole solution work we need to propagate the constraints all the way
 \vspace{0.2cm}
 }
 
-Although, the approach works as exemplified by a number of the packages on Hackage, we aim for release of generic programs from overlap. That would avoid the complexity ovehead introduced by the approach, as we have noted in the introduction.
+Although, the approach works, as exemplified by a number of the packages on Hackage, we aim for release of generic programs from overlap. This would remove the complexity overhead introduced by the approach, as we have mentioned in the introduction.
 
 
 \section{Handling recursion with closed type families}
 \label{sec:handling-recursion}
 
 
-In the previous section, we have shown a solution to the problem of handling recursion, which makes use of overlapping instances. We are going to improve the solution and remove overlap now.
+In the previous section, we have shown a solution to the problem of handling recursion, which uses overlapping instances. We are going to improve the solution and remove overlap now.
 
-Closed type families are the Haskell language extension introduced by Eisenberg et al.~\cite{Eisenberg2014}. The main idea of the extension being that the equations for a \emph{closed type family} are disallowed outside its declaration. Under the extension, we can give the following definition of type-level equality:
+Closed type families are the Haskell language extension introduced by Eisenberg et al.~\cite{Eisenberg2014}. The main idea of the extension is that the equations for a \emph{closed type family} are disallowed outside its declaration. Under the extension, we can give the following definition of type-level equality:
 \texttt{
 \vs
 \indent\textbf{type family} Equal a x \ann Bool \textbf{where}\\
@@ -258,9 +258,10 @@ Closed type families are the Haskell language extension introduced by Eisenberg 
 }
 The equations in a closed type family are matched in a top-to-bottom order. Since the order is fixed, the overlapping equations here cannot be used to define unsound type-level equations.
 
-\subsection{Solution to \texttt{subterms} revised}
+\subsection{Solution to \texttt{subtermsNP} revised}
+\label{subsec:solve-subtermnp}
 
-We now return to our running example from Section~\ref{sec:recursion-problem}. With the type equality, we can witness the coercion between the equal types by defining a type class:
+We now return to our running example from Section~\ref{sec:recursion-problem}. With the type equality, we can witness the coercion between equal types by defining a type class:
 \texttt{
 \vs
 \indent\textbf{class} Proof (eq \ann Bool) (a \ann *) (b \ann *) \textbf{where}\\
@@ -356,16 +357,24 @@ Here is a benefit of our implementation: it can be used directly, without any ad
 This is a consequence of \texttt{gshow} from \textsf{basic-sop} not treating recursive positions separately, and therefore requiring the \texttt{Show} constraint for all knots in the datatype structure.
 
 
-\section{The generic Zipper}
+\section{The generic zipper}
 \label{sec:generic-zipper}
 
-The zipper is a data structure that enables efficient editing and navigation within the tree-like structure of a datatype by representing a current location in that structure. The location is a focus, which can be one of recursive nodes in the tree, along with its context that consists of surroundings of the focal subtree.
+The zipper is a data structure that enables efficient navigation and editing within the tree-like structure of a datatype. It  represents a current location in that structure, a \emph{focus}, storing a tree node along with its context. 
+%that consists of surroundings of the focal subtree.
 
-The classical zipper described by Huet~\cite{Huet1997} can be generically produced for regular datatypes~\cite{HiJeLo2004}, which are a subset of datatypes that can be viewed as a least fixed point of some polynomial expression on types. Yakushev~et~al.~\cite{MuRec2009} generalize the definition of the generic zipper for an arbitrary family of mutually recursive datatypes. Those known solutions require a datatype to be expressed using forms of a fixed-point operator, since the zipper operates on recursion points. Using closed type families, it is possible to define the generic zipper using a representation that does not exploit a fixed point. In this section, we implement the generic zipper interface that includes functions for manipulating locations for mutually recursive datatypes using the SOP view.
+The classical zipper described by Huet~\cite{Huet1997} can be generically calculated for regular datatypes~\cite{HiJeLo2004}---a subset of datatypes that can be viewed as a least fixed point of some polynomial expression on types. Yakushev~et~al.~\cite{MuRec2009} generalize the definition of the generic zipper for an arbitrary family of mutually recursive datatypes. All mentioned solutions require a datatype to be expressed using forms of a fixed-point operator, since the zipper operates on recursion points. 
+
+Our approach allows to define the generic zipper using a representation that does not exploit a fixed point. In this section, we implement the generic zipper interface that includes functions for manipulating locations for mutually recursive datatypes using the SOP view.
 
 \subsection{Interface and using}
 
-Having the location of the zipper, which holds the current focus on one of recursive knots in the structure---for the zipper for mutually recursive datatypes, this means recursion points of the total structure of a family---and its context, we may produce a new location by moving that focus up, down, left, or right. We are first going to show the generic zipper interface and an example of how it can be used, and then proceed to implement that interface. The interface we provide for using the generic zipper is displayed in Figure~\ref{fig:zipper-interface}. This comprises the functions for \emph{movement}, \emph{starting} and \emph{ending navigation}, and \emph{updating} the focus, which are defined over the location structure.
+Having a zipper focused on one of recursive knots in a structure, we may produce a new location by moving the focus up, down, left, or right.
+%for the zipper for mutually recursive datatypes, this means 
+%recursion points of the total structure of a family
+We start with the generic zipper interface for those operations and an example of how it can be used, then proceeding to the implementation.
+
+The interface we provide for the generic zipper is shown on Figure~\ref{fig:zipper-interface}. It comprises the functions for \emph{movement}, \emph{starting} and \emph{ending navigation}, and \emph{updating} the focus, which are defined over the location structure.
 \begin{figure}[t]
 \centering
 \normalsize
@@ -773,9 +782,11 @@ We have established the mechanism of translation, which is cumbersome but verify
 \section{Related work}
 \label{sec:related-work}
 
-Over the years, there has been a lot of works that contribute to datatype-generic programming, and a lot of knowledge has been accumulated. Rodriguez et al.~\cite{Rodriguez2008} and Magalh{\~{a}}es and L{\"{o}}h~\cite{MagLoeh2012} review a number of existing approaches and provide their detailed comparison in different aspects. There are several generic views that use forms of the fixed point operator to express recursion in a datatype structure~\cite{VanNoort2008,MuRec2009,Jansson1997,Loeh2011}. And there are a number of approaches that do not make use of fixed points~\cite{Chakravarty2009,Cheney2002,Magalhaes2010,Weirich2006}, but explicitly encode recursion in the datatype representation. The SOP view~\cite{VriLoeh2014} which we use to demonstrate our technique is an approach to generic programming that does not reflect recursive positions in the generic representation of a datatype. This approach uses heterogeneous lists of types to encode sums and products in the generic representation.
+There are many works that contribute to datatype-generic programming, and a lot of knowledge has been accumulated. Rodriguez et al.~\cite{Rodriguez2008} and Magalh{\~{a}}es and L{\"{o}}h~\cite{MagLoeh2012} review a number of existing approaches and provide their detailed comparison in various aspects. There are several generic views that use certain forms of the fixed point operator to express recursion in a datatype structure~\cite{VanNoort2008,MuRec2009,Jansson1997,Loeh2011}. And there are a number of approaches that do not make use of fixed points~\cite{Chakravarty2009,Cheney2002,Magalhaes2010,Weirich2006}, but explicitly encode recursion in the datatype representation. The SOP view~\cite{VriLoeh2014}, which we use to demonstrate our technique, is an approach to generic programming that does not reflect recursive positions in the generic representation of a datatype. This approach uses heterogeneous lists of types to encode sums and products in the generic representation.
 
-The idea similar to SOP has been proposed by Kiselyov~et~al.~\cite{Kiselyov2004} in their \textsf{HList} library for strongly typed heterogeneous collections. In their paper, they also discuss problems concerened with overlap which they use for access operations. They restrict overlap by introducing a type class using a functional dependency, which provides functionality of type equality that is similar to our solution. Morris and Jones~\cite{Morris2010} introduce the type-class system \textsf{ilab}, based on the Haskell 98 class system, with a new feature, called ``instance chains'', that allows to control overlap by using an explicit syntax in instance declarations, which resembles if-else chains. But use of instance chains and local use of overlap leave code error-prone as a consequence of type class oppennes. Closed type families~\cite{Eisenberg2014} were recently introduced in Haskell to solve the overlap problem.
+The idea similar to SOP has been proposed by Kiselyov~et~al.~\cite{Kiselyov2004} in their \textsf{HList} library for strongly typed heterogeneous collections. In the paper, the authors also discuss problems connected with overlap, which they use for access operations. Another Haskell extension, functional dependencies, is applied to supply overlap-free machinery of type equality there, which resembles our solution. 
+
+Morris and Jones~\cite{Morris2010} introduce the type-class system \textsf{ilab}, based on the Haskell 98 class system, with a new feature called ``instance chains''. This enables one to control overlap by using an explicit syntax in instance declarations. The approach resembles if-else chains. But the use of instance chains and local use of overlap leave code error-prone as a consequence of type class openness. Closed type families~\cite{Eisenberg2014} were recently introduced in Haskell to solve the overlap problem.
 
 Several works show how to define the Zipper~\cite{Huet1997} generically for regular~\cite{HiJeLo2004,McBride2001} and mutually recursive~\cite{MuRec2009} types using fixed-point generic views. Adams~\cite{Adams2010} defines a generic zipper for heterogeneous types.
 
