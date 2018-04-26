@@ -246,9 +246,9 @@ Although, the approach works, as exemplified by a number of the packages on Hack
 \label{sec:handling-recursion}
 
 
-In the previous section, we have shown a solution to the problem of handling recursion, which makes use of overlapping instances. We are going to improve the solution and remove overlap now.
+In the previous section, we have shown a solution to the problem of handling recursion, which uses overlapping instances. We are going to improve the solution and remove overlap now.
 
-Closed type families are the Haskell language extension introduced by Eisenberg et al.~\cite{Eisenberg2014}. The main idea of the extension being that the equations for a \emph{closed type family} are disallowed outside its declaration. Under the extension, we can give the following definition of type-level equality:
+Closed type families are the Haskell language extension introduced by Eisenberg et al.~\cite{Eisenberg2014}. The main idea of the extension is that the equations for a \emph{closed type family} are disallowed outside its declaration. Under the extension, we can give the following definition of type-level equality:
 \texttt{
 \vs
 \indent\textbf{type family} Equal a x \ann Bool \textbf{where}\\
@@ -261,7 +261,7 @@ The equations in a closed type family are matched in a top-to-bottom order. Sinc
 \subsection{Solution to \texttt{subtermsNP} revised}
 \label{subsec:solve-subtermnp}
 
-We now return to our running example from Section~\ref{sec:recursion-problem}. With the type equality, we can witness the coercion between the equal types by defining a type class:
+We now return to our running example from Section~\ref{sec:recursion-problem}. With the type equality, we can witness the coercion between equal types by defining a type class:
 \texttt{
 \vs
 \indent\textbf{class} Proof (eq \ann Bool) (a \ann *) (b \ann *) \textbf{where}\\
@@ -782,9 +782,11 @@ We have established the mechanism of translation, which is cumbersome but verify
 \section{Related work}
 \label{sec:related-work}
 
-Over the years, there has been a lot of works that contribute to datatype-generic programming, and a lot of knowledge has been accumulated. Rodriguez et al.~\cite{Rodriguez2008} and Magalh{\~{a}}es and L{\"{o}}h~\cite{MagLoeh2012} review a number of existing approaches and provide their detailed comparison in different aspects. There are several generic views that use forms of the fixed point operator to express recursion in a datatype structure~\cite{VanNoort2008,MuRec2009,Jansson1997,Loeh2011}. And there are a number of approaches that do not make use of fixed points~\cite{Chakravarty2009,Cheney2002,Magalhaes2010,Weirich2006}, but explicitly encode recursion in the datatype representation. The SOP view~\cite{VriLoeh2014} which we use to demonstrate our technique is an approach to generic programming that does not reflect recursive positions in the generic representation of a datatype. This approach uses heterogeneous lists of types to encode sums and products in the generic representation.
+There are many works that contribute to datatype-generic programming, and a lot of knowledge has been accumulated. Rodriguez et al.~\cite{Rodriguez2008} and Magalh{\~{a}}es and L{\"{o}}h~\cite{MagLoeh2012} review a number of existing approaches and provide their detailed comparison in various aspects. There are several generic views that use certain forms of the fixed point operator to express recursion in a datatype structure~\cite{VanNoort2008,MuRec2009,Jansson1997,Loeh2011}. And there are a number of approaches that do not make use of fixed points~\cite{Chakravarty2009,Cheney2002,Magalhaes2010,Weirich2006}, but explicitly encode recursion in the datatype representation. The SOP view~\cite{VriLoeh2014}, which we use to demonstrate our technique, is an approach to generic programming that does not reflect recursive positions in the generic representation of a datatype. This approach uses heterogeneous lists of types to encode sums and products in the generic representation.
 
-The idea similar to SOP has been proposed by Kiselyov~et~al.~\cite{Kiselyov2004} in their \textsf{HList} library for strongly typed heterogeneous collections. In their paper, they also discuss problems concerened with overlap which they use for access operations. They restrict overlap by introducing a type class using a functional dependency, which provides functionality of type equality that is similar to our solution. Morris and Jones~\cite{Morris2010} introduce the type-class system \textsf{ilab}, based on the Haskell 98 class system, with a new feature, called ``instance chains'', that allows to control overlap by using an explicit syntax in instance declarations, which resembles if-else chains. But use of instance chains and local use of overlap leave code error-prone as a consequence of type class oppennes. Closed type families~\cite{Eisenberg2014} were recently introduced in Haskell to solve the overlap problem.
+The idea similar to SOP has been proposed by Kiselyov~et~al.~\cite{Kiselyov2004} in their \textsf{HList} library for strongly typed heterogeneous collections. In the paper, the authors also discuss problems connected with overlap, which they use for access operations. Another Haskell extension, functional dependencies, is applied to supply overlap-free machinery of type equality there, which resembles our solution. 
+
+Morris and Jones~\cite{Morris2010} introduce the type-class system \textsf{ilab}, based on the Haskell 98 class system, with a new feature called ``instance chains''. This enables one to control overlap by using an explicit syntax in instance declarations. The approach resembles if-else chains. But the use of instance chains and local use of overlap leave code error-prone as a consequence of type class openness. Closed type families~\cite{Eisenberg2014} were recently introduced in Haskell to solve the overlap problem.
 
 Several works show how to define the Zipper~\cite{Huet1997} generically for regular~\cite{HiJeLo2004,McBride2001} and mutually recursive~\cite{MuRec2009} types using fixed-point generic views. Adams~\cite{Adams2010} defines a generic zipper for heterogeneous types.
 
