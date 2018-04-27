@@ -183,7 +183,7 @@ With the \texttt{NS} and \texttt{NP} machinery at hand, SOP defines the \texttt{
 \indent\s\s to\s\s\s \ann Rep a \ra a
 \vs
 }
-The sum of products type, \texttt{SOP f}, is a newtype-wrapper for \texttt{NS (NP f)}, and the structural representation \texttt{Rep} of a datatype \texttt{a} is a type synonym for a \texttt{SOP I} of \texttt{a}'s code. The functions, \texttt{from} and \texttt{to}, perform a shallow conversion of the datatype topmost layer---they does not recursively translate the constructor arguments.
+The sum of products type, \texttt{SOP f}, is a newtype-wrapper for \texttt{NS (NP f)}, and the structural representation \texttt{Rep} of a datatype \texttt{a} is a type synonym for a \texttt{SOP I} of \texttt{a}'s code. The functions, \texttt{from} and \texttt{to}, perform a shallow conversion of the datatype topmost layer---they do not recursively translate the constructor arguments.
 
 We leave out discussion of the \texttt{SListI} constraint in the \texttt{Generic} class definition as irrelevant to our work. Although, we do use \texttt{All} constraint combinator (as in \texttt{All SListI}) in the following. Therefore, it is worth noting that \texttt{All} applies a particular constraint (e.g. \texttt{SListI} above) to each member of a list of types. The usage of constraints as type arguments is allowed due to \textsf{ConstraintKinds} language extension introducing a dedicated kind \texttt{Constraint}.
 
@@ -360,7 +360,7 @@ This is a consequence of \texttt{gshow} from \textsf{basic-sop} not treating rec
 \section{The generic zipper}
 \label{sec:generic-zipper}
 
-The zipper is a data structure that enables efficient navigation and editing within the tree-like structure of a datatype. It  represents a current location in that structure, a \emph{focus}, storing a tree node along with its context. 
+The zipper is a data structure that enables efficient navigation and editing within the tree-like structure of a datatype. It represents a current location in that structure, storing a tree node, a \emph{focus}, along with its context. 
 %that consists of surroundings of the focal subtree.
 
 The classical zipper described by Huet~\cite{Huet1997} can be generically calculated for regular datatypes~\cite{HiJeLo2004}---a subset of datatypes that can be viewed as a least fixed point of some polynomial expression on types. Yakushev~et~al.~\cite{MuRec2009} generalize the definition of the generic zipper for an arbitrary family of mutually recursive datatypes. All mentioned solutions require a datatype to be expressed using forms of a fixed-point operator, since the zipper operates on recursion points. 
@@ -372,7 +372,7 @@ Our approach allows to define the generic zipper using a representation that doe
 Having a zipper focused on one of recursive knots in a structure, we may produce a new location by moving the focus up, down, left, or right.
 %for the zipper for mutually recursive datatypes, this means 
 %recursion points of the total structure of a family
-We start with the generic zipper interface for those operations and an example of how it can be used, then proceeding to the implementation.
+We start with the generic zipper interface for those operations and an example of how it can be used, then proceed to the implementation.
 
 The interface we provide for the generic zipper is shown on Figure~\ref{fig:zipper-interface}. It comprises the functions for \emph{movement}, \emph{starting} and \emph{ending navigation}, and \emph{updating} the focus, which are defined over the location structure.
 \begin{figure}[t]
@@ -514,7 +514,7 @@ The \texttt{In} constraint is defined as
 \vspace{0.2cm}
 }
 
-Together with the datatype of families, we define a class \texttt{ProofIn} that provides a proof of membership of a family, which generalizes the proof of type equality from Section~\ref{sec:handling-recursion}. The definition of the \texttt{ProofIn} class and its auxiliary class \texttt{ProofFam} is given in Figure~\ref{fig:proof-in}. The constraints on the second \texttt{ProofFam} instance, which repeat the same ones from the \texttt{Family} constructor, constitute the proof.
+Together with the datatype of families, we define a class \texttt{ProofIn} that provides a proof of membership of a family, which generalizes the proof of type equality from Section~\ref{sec:handling-recursion}. The definitions of \texttt{ProofIn} and its auxiliary class \texttt{ProofFam} are given in Figure~\ref{fig:proof-in}. The constraints on the second \texttt{ProofFam} instance, which repeat the same ones from the \texttt{Family} constructor, constitute the proof.
 \begin{figure}[t]
 \centering
 \normalsize
@@ -586,7 +586,7 @@ McBride~\cite{McBride2001} studies a relation between the one-hole context defin
 The addition operation just appends two type-level lists of lists (sums of products), multiplication by a type adds the type to the head of each inner list of the sum (here we see multiplication of a product and the distributive property of multiplication over addition, just as in arithmetic of numbers), and multiplication by a product appends the list to the head of each inner product of the sum. Again, kind \texttt{[*]} here denotes products, and \texttt{[[*]]} denotes sums (of products), so the relation with arithmetic of numbers in these definitions becomes more clear if one realizes that an empty sum \texttt{'[] \ann [[*]]} corresponds to $1$, and an empty product \texttt{'[] \ann [*]} corresponds to $0$. We also specify, through the \texttt{infixr} declaration, that multiplication has a higher priority than addition.
 
 Using the defined operations, we can implement differentiation of a product of types. The definition of differentiation shown in Figure~\ref{fig:diff-prod} resembles its analogue from calculus, but it is now generalized for the setting of families of datatypes: the differentiation of the single type reflected by a one-element list here results in $0$ (reflected by \texttt{'[]}) if that is not in the family and hence is regarded as a constant, otherwise it results in $1$. When differentiation gives $1$, it is actually the hole, which we express by defining the unit type \texttt{Hole}. Reflecting this type in the context is helpful when we traverse the context representation to plug the hole. We use the empty type \texttt{End} to distinguish the case when the hole is found at the end of the list, in order not to add that into the result twice. The sum \texttt{'[ '[]]} represents a unit type that is exactly $1$. We also use type-level \texttt{If} that returns its second argument for \texttt{'True}, and the third one otherwise. We do not give its definition here, as it is straightforward.
-\begin{figure}[!b]
+\begin{figure}[t]
 \centering
 \normalsize
 \begin{tabular}{l}
@@ -784,7 +784,7 @@ We have established the mechanism of translation, which is cumbersome but verify
 
 There are many works that contribute to datatype-generic programming, and a lot of knowledge has been accumulated. Rodriguez et al.~\cite{Rodriguez2008} and Magalh{\~{a}}es and L{\"{o}}h~\cite{MagLoeh2012} review a number of existing approaches and provide their detailed comparison in various aspects. There are several generic views that use certain forms of the fixed point operator to express recursion in a datatype structure~\cite{VanNoort2008,MuRec2009,Jansson1997,Loeh2011}. And there are a number of approaches that do not make use of fixed points~\cite{Chakravarty2009,Cheney2002,Magalhaes2010,Weirich2006}, but explicitly encode recursion in the datatype representation. The SOP view~\cite{VriLoeh2014}, which we use to demonstrate our technique, is an approach to generic programming that does not reflect recursive positions in the generic representation of a datatype. This approach uses heterogeneous lists of types to encode sums and products in the generic representation.
 
-The idea similar to SOP has been proposed by Kiselyov~et~al.~\cite{Kiselyov2004} in their \textsf{HList} library for strongly typed heterogeneous collections. In the paper, the authors also discuss problems connected with overlap, which they use for access operations. Another Haskell extension, functional dependencies, is applied to supply overlap-free machinery of type equality there, which resembles our solution. 
+The idea similar to SOP has been proposed by Kiselyov~et~al.~\cite{Kiselyov2004} in their \textsf{HList} library for strongly typed heterogeneous collections. In the paper, the authors also discuss problems connected with overlap, which they use for access operations. Another Haskell extension, functional dependencies, is applied to restrict overlap in type equality there, which resembles our solution.
 
 Morris and Jones~\cite{Morris2010} introduce the type-class system \textsf{ilab}, based on the Haskell 98 class system, with a new feature called ``instance chains''. This enables one to control overlap by using an explicit syntax in instance declarations. The approach resembles if-else chains. But the use of instance chains and local use of overlap leave code error-prone as a consequence of type class openness. Closed type families~\cite{Eisenberg2014} were recently introduced in Haskell to solve the overlap problem.
 
