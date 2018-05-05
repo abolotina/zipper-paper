@@ -372,7 +372,7 @@ The classical zipper described by Huet~\cite{Huet1997} can be generically calcul
 
 Our approach allows to define the generic zipper using a representation that does not exploit a fixed point. In this section, we implement the generic zipper interface that includes functions for manipulating locations for mutually recursive datatypes using the SOP view.
 
-\subsection{Interface and using}
+\subsection{Interface and usage}
 
 Having a zipper focused on one of recursive knots in a structure, we may produce a new location by moving the focus up, down, left, or right.
 %for the zipper for mutually recursive datatypes, this means 
@@ -411,13 +411,15 @@ The interface we provide for the generic zipper is shown on Figure~\ref{fig:zipp
 \label{fig:zipper-interface}
 \end{figure}
 
-The functions \texttt{goUp}, \texttt{goDown}, \texttt{goLeft}, and \texttt{goRight} produce a location with the focus moved \emph{up} to the parent of the focal subtree, \emph{down} to its leftmost child, \emph{left} and \emph{right} to the left and right sibling, respectively, if it is possible. Movement may fail, as specified by the \texttt{Maybe} monad, if we cannot go further in a chosen direction.
+The functions \texttt{goUp}, \texttt{goDown}, \texttt{goLeft}, and \texttt{goRight} produce a location with the focus moved \emph{up} to the parent of the focal subtree, \emph{down} to its leftmost child, \emph{left} and \emph{right} to the left and right sibling, respectively, if it is possible. A movement may fail, as specified by the \texttt{Maybe} monad, if we cannot go further in a chosen direction. Navigation in a tree starts at the root, and the type variable \texttt{a} refers to the root type that remains the same during the navigation, while the type in the focus of the location may vary and is one of the types in a type list \texttt{fam}.
 
-The function signature of \texttt{enter} specifies the constraints necessary for starting navigation in a structure. A datatype of the structure needs to have the generic representation; the \texttt{In} constraint is defined over a generalization of \texttt{Equal} from Section~\ref{sec:handling-recursion}, which checks a type for membership of a family; the \texttt{Zipper} constraint collects specific constraints that refer to the implementation of movement operations. The universal quantifier here sets the instantiation order of the type variables for type applications that will be a part of our usage pattern for the zipper. Navigation in a tree starts at the root, and the type variable \texttt{a} refers to the root type that keeps fixed during the navigation, since it is necessary for leaving a tree and returning the root, while type in focus of the location may vary and is one of types in the type list \texttt{fam} (of kind \texttt{[*]}) specifying a family. The \texttt{leave} function ends navigation moving up to the root and returns its modified value.
+The function signature of \texttt{enter} specifies the constraints necessary to begin navigation in a structure. Firstly, a datatype of the structure needs to have the \texttt{Generic} representation. Secondly, the \texttt{In} constraint checks if type \texttt{a} is a member of a type family \texttt{fam}. Thirdly, the \texttt{Zipper} constraint collects specific constraints that refer to the implementation of movement operations. Note that the universal quantifier here sets the instantiation order of the type variables for type applications that will be a part of our usage pattern for the zipper. 
 
-The function \texttt{update} modifies the focal subtree with a constrained function, where the type in focus is existential in \texttt{Loc}, and the datatype of locations guarantees that the constraint \texttt{c} (actually, it has kind \texttt{* \ra Constraint}) holds for all datatypes in the family \texttt{fam} and therefore for all recursive nodes that can be in focus, whence the function can be applied.
+The \texttt{leave} function ends navigation moving up to the root and returns its modified value. 
 
-Let us show how to use this with an example. Consider the following pair of mutually recursive datatypes for a rose tree and a forest, where the forest is a list of trees, and the tree is defined as a value in the node and a forest of its children:
+The \texttt{update} function modifies the focal subtree with a given constrained function. The type in focus is existentially quantified inside \texttt{Loc} and should satisfy constraint \texttt{c}. The structure of \texttt{Loc} (shown in Section~\ref{ss:locs}) guarantees that the constraint holds for all types in the family \texttt{fam} and, therefore, for all recursive nodes that can be in focus, hence \texttt{update} can always be applied.
+
+Consider the following example of usage of the interface. Define a pair of mutually recursive datatypes for a rose tree and a forest, where the forest is a list of trees, and the tree is defined as a value in a node and a forest of its children:
 \texttt{
 \vs
 \indent data RoseTree a = RTree a (Forest a)
@@ -426,7 +428,7 @@ Let us show how to use this with an example. Consider the following pair of mutu
 \vspace{0.2cm}
 }
 
-We can define a class that provides a function for updating the trees, for example:
+Updating the trees can be done through a class:
 \texttt{
 \vs
 \indent class UpdateTree a b where\\
@@ -437,9 +439,9 @@ We can define a class that provides a function for updating the trees, for examp
 \indent instance UpdateTree a (Forest a)
 \vs
 }
-This replaces the tree node with a given tree, and for the forests, this leaves the nodes without change. This is also scalable if we want to extend the family.
+This replaces a tree node with a given tree, and, for the forests, this leaves the nodes untouched.
 
-For chaining moves and edits, we can follow Yakushev~et~al.~\cite{MuRec2009} and exploit the flipped function composition \comp~and Kleisli composition \kleisli, using the monad interface of \texttt{Maybe} that wraps the result type of the movement functions.
+For chaining moves and edits, we can follow Yakushev~et~al.~\cite{MuRec2009} and employ  the flipped function composition \comp~and Kleisli composition \kleisli. The latter one is instantiated with the \texttt{Maybe} monad that wraps the result type of the movement functions.
 \texttt{
 \vs
 \indent (\comp) \ann (a \ra b) \ra (b \ra c) \ra (a \ra c)\\
@@ -447,13 +449,14 @@ For chaining moves and edits, we can follow Yakushev~et~al.~\cite{MuRec2009} and
 \vspace{0.2cm}
 }
 
-We now define the family of our datatypes simply as follows:
+The type family we need to run the example is defined as follows:
 \texttt{
 \vs
 \indent type TreeFam a = '[RoseTree a, Forest a]
 \vs
 }
-And the example below shows how we can use the zipper operations with our updating function to change a mutually recursive expression:
+
+Finally, we can use zipper operations with our updating function to traverse and replace a part of a forest:
 \texttt{
 \vs
 \indent *Main> let forest\\
@@ -476,9 +479,10 @@ This yields the following result:
 \vspace{0.2cm}
 }
 
-We also may use the zipper merely for regular datatypes, when we want to move only to recursive knots of a single datatype, just assigning a one-element type-level list to the family at the \texttt{enter} call. Or we may enumerate all types, whose nodes we want to visit, in that list. This is flexible, as this requires no boilerplate declarations. However, we demand an updating operation to be a type class function to distinguish types of the nodes, and enforce a constraint, which may be single or complex, on all types in the family, because the type of the focus is existential, as already said.
+Our zipper applies to regular datatypes as well. In that case, \texttt{fam} list shall contain a single element. Generally, the interface is flexible enough to allow us to check in any collection of types we are interested in during traversal. However, we demand an updating operation to be a type class function to distinguish the types of the nodes.
 
 \subsection{Locations}
+\label{ss:locs}
 
 The location structure consists of the focal subtree, which is one of the mutually recursive nodes of total structure of the family of datatypes, and its surrounding context. We give the following definition of the datatype \texttt{Loc} for locations:
 \texttt{
