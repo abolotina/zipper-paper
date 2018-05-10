@@ -493,8 +493,6 @@ The type parameters \texttt{r}, \texttt{fam}, and \texttt{c} in \texttt{Loc} cor
 
 The subtree in a focus is wrapped by the \texttt{Family} datatype. 
 The wrapper incapsulates the proofs about a number of important properties of a focus.
-We define the \texttt{Family} datatype as a GADT, with embedded 
-constraints on its constructor:
 \texttt{
 \vs
 \indent data Family (r \ann *) (a \ann *) (fam \ann [*])\\
@@ -503,25 +501,30 @@ constraints on its constructor:
 \indent\ind\ind\s\Ra b \ra Family r a fam c
 \vs
 }
-Though we do not know the type of the focus that is the existential type \texttt{b} in the family, we can obtain enough information about that type to provide the zipper functionality, which is captured by the restrictions above. We guarantee that the type \texttt{b} is a member of the family, and satisfies a set of constraints of the whole zipper interface, collected in the \texttt{ZipperI} constraint: in particular, it ensures that \texttt{a} is the type of the parent node for the node of focus of type \texttt{b} in the tree.
+Existential type variable \texttt{b} represents the type of a focus. We apply a number of predicates to \texttt{b}, hence we can implement the steps of the navigation not knowing the actual type of a focus. Firstly, the type of a focus should have the \texttt{Generic} representation. Secondly, it should live \texttt{In} the list of types we are going to visit. Lastly, it ought to satisfy the set of constraints for the whole zipper interface captured by the \texttt{ZipperI} predicate. In particular, the predicate ensures that \texttt{a} is the type of the parent for the focus in the structure under consideration.
 
-We define the \texttt{In} constraint by means of a type family \texttt{InFam} that is a generalization of \texttt{Equal} defined in Section~\ref{sec:handling-recursion}. The following checks a type for membership of a type-level list that we use to express a family:
+We implement the \texttt{In} constraint by means of a type family \texttt{InFam} exactly along the lines of \texttt{Equal} family defined in the beginning of Section~\ref{sec:handling-recursion}. 
+%~ The following checks a type for membership of a type-level list that we use to express a family:
+%~ \texttt{
+%~ \vs
+%~ \indent type family InFam (a \ann k) (fam \ann [k]) \ann Bool where\\
+%~ \indent\s\s InFam a (a ': fam) = 'True\\
+%~ \indent\s\s InFam a (x ': fam) = InFam a fam\\
+%~ \indent\s\s InFam a '[]\ind\ind = 'False
+%~ \vs
+%~ }
+%~ The \texttt{In} constraint is defined as
 \texttt{
 \vs
-\indent type family InFam (a \ann k) (fam \ann [k]) \ann Bool where\\
-\indent\s\s InFam a (a ': fam) = 'True\\
-\indent\s\s InFam a (x ': fam) = InFam a fam\\
-\indent\s\s InFam a '[]\ind\ind = 'False
+\indent type In a fam = InFam a fam \tteq 'True\\
 \vs
 }
-The \texttt{In} constraint is defined as
-\texttt{
-\vs
-\indent type In a fam = InFam a fam \tteq 'True
-\vspace{0.2cm}
-}
+The definition of \texttt{InFam} is omitted as a boring one.
 
-Together with the datatype of families, we define a class \texttt{ProofIn} that provides a proof of membership of a family, which generalizes the proof of type equality from Section~\ref{sec:handling-recursion}. The definitions of \texttt{ProofIn} and its auxiliary class \texttt{ProofFam} are given in Figure~\ref{fig:proof-in}. The constraints on the second \texttt{ProofFam} instance, which repeat the same ones from the \texttt{Family} constructor, constitute the proof.
+One last missing piece for managing focuses is the class \texttt{ProofIn}. it provides a proof of membership of a focus type to a family. Again, this generalizes the proof of type equality from Section~\ref{sec:handling-recursion}. The definitions of \texttt{ProofIn} and an auxiliary class \texttt{ProofFam} are given in Figure~\ref{fig:proof-in}. 
+%The constraints on the second \texttt{ProofFam} instance, which repeat the same ones from the \texttt{Family} constructor, constitute the proof.
+% this is not clear and, I think, can be omitted
+
 \begin{figure}[t]
 \centering
 \normalsize
@@ -560,7 +563,9 @@ When we focus on a particular node in a data structure, having the surrounding c
 }
 This has the shape similar to the previously defined \texttt{Loc} and \texttt{Family} datatypes: it keeps the types of the root and of the immediate parent of the focal node (of the union with the focal subtree when that plugs the hole)---as ensured by sharing that type with \texttt{Family} in the \texttt{Loc} constructor. The \texttt{ZipperI} constraint with the type \texttt{x} of the previous context frame here indicates that the constraint for the zipper holds after plugging the hole, so all the properties, conversely, can be proved by induction for the focus type when it moves down in the tree adding new contexts onto the stack---and the \texttt{CNil} constructor for an empty context with the \texttt{r} and \texttt{a} types equal is the inductive basis in that proof. Note that the type of the current focus is not reflected in the \texttt{Contexts} datatype, as we do not need that.
 
-McBride~\cite{McBride2001} studies a relation between the one-hole context definition and \emph{partial differentiation} from calculus: he shows that the type of the context for an arbitrary (regular) type can be derived mechanically from that type by means of a list of differentiation \emph{rules} that serve as formulaic instructions for computing the type in type-level programming. Yakushev~et~al.~\cite{MuRec2009} then demonstrate that his method can be generalized for mutually recursive datatypes. We adapt that technique to \textsf{generics-sop}, and now need a few auxiliary type-level functions to implement the computation of the context type. Those functions, defined recursively via type families, provide algebraic operations for lists of types (which we regard as sums and products of types): addition and multiplication. Specifically, we define addition \texttt{.++} of two sums of products (SOP) of types, multiplication \texttt{.*} of a SOP by a single type, and multiplication \texttt{.**} of a SOP by a product of types, as shown in Figure~\ref{fig:type-arithmetic}.
+\subsubsection{Type-level Differentiation}
+
+McBride~\cite{McBride2001} studies a relation between the one-hole context definition and \emph{partial differentiation} from calculus: he shows that the type of the context for an arbitrary (regular) type can be derived mechanically from that type by means of a list of differentiation \emph{rules} that serve as formulaic instructions for computing the type in type-level programming. Yakushev~et~al.~\cite{MuRec2009} then demonstrate that the method can be generalized for mutually recursive datatypes. We adapt that technique to \textsf{generics-sop}, and now need a few auxiliary type-level functions to implement the computation of the context type. Those functions, defined recursively via type families, provide algebraic operations for lists of types (which we regard as sums and products of types): addition and multiplication. Specifically, we define addition \texttt{.++} of two sums of products (SOP) of types, multiplication \texttt{.*} of a SOP by a single type, and multiplication \texttt{.**} of a SOP by a product of types, as shown in Figure~\ref{fig:type-arithmetic}.
 \begin{figure}[h]
 \centering
 \normalsize
