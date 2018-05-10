@@ -19,7 +19,7 @@ Cheney, J., Hinze, R.: A lightweight implementation of generics and dynamics.
 
 \bibitem{Claessen2011}
 Claessen, K., Hughes, J.: Quickcheck: A lightweight tool for random testing of
-  haskell programs. SIGPLAN Not.  \textbf{46}(4),  53--64 (May 2011).
+  Haskell programs. SIGPLAN Not.  \textbf{46}(4),  53--64 (May 2011).
   \doi{10.1145/1988042.1988046}
 
 \bibitem{VriLoeh2014}
@@ -39,13 +39,13 @@ Eisenberg, R.A., Vytiniotis, D., Peyton~Jones, S., Weirich, S.: Closed type
   \doi{10.1145/2535838.2535856}
 
 \bibitem{sh-overlapping}
-Safe haskell \& overlapping instances---ghc (2015),
+Safe Haskell \& overlapping instances---GHC (2015),
   \url{https://ghc.haskell.org/trac/ghc/wiki/SafeHaskell/NewOverlappingInstances}
 
 \bibitem{HiJeLo2004}
 Hinze, R., Jeuring, J., L\"{o}h, A.: Type-indexed data types. Science of
   Computer Programming  \textbf{51}(1),  117--151 (2004).
-  \doi{10.1016/j.scico.2003.07.001}, mathematics of Program Construction (MPC
+  \doi{10.1016/j.scico.2003.07.001}, Mathematics of Program Construction (MPC
   2002)
 
 \bibitem{Huet1997}
@@ -68,8 +68,8 @@ Kiselyov, O., L\"{a}mmel, R., Schupke, K.: Strongly typed heterogeneous
 L\"{o}h, A.: Exploring Generic Haskell. Ph.D. thesis, Utrecht University (2004)
 
 \bibitem{Loeh2015}
-L\"{o}h, A.: Applying type-level and generic programming in haskell (2018),
-  \url{https://github.com/kosmikus/SSGEP/blob/master/LectureNotes.pdf}, summer
+L\"{o}h, A.: Applying type-level and generic programming in Haskell (2018),
+  \url{https://github.com/kosmikus/SSGEP/blob/master/LectureNotes.pdf}, Summer
   School on Generic and Effectful Programming (SSGEP 2015)
 
 \bibitem{Loeh2011}
@@ -84,7 +84,7 @@ Magalh\~{a}es, J.P.: Less Is More: Generic Programming Theory and Practice.
 
 \bibitem{Magalhaes2010}
 Magalh\~{a}es, J.P., Dijkstra, A., Jeuring, J., L\"{o}h, A.: A generic deriving
-  mechanism for haskell. In: Proceedings of the Third ACM Haskell Symposium on
+  mechanism for Haskell. In: Proceedings of the Third ACM Haskell Symposium on
   Haskell. pp. 37--48. Haskell '10, ACM, New York, NY, USA (2010).
   \doi{10.1145/1863523.1863529}
 
@@ -112,7 +112,7 @@ Morris, J.G., Jones, M.P.: Instance chains: Type class programming without
 
 \bibitem{Rodriguez2008}
 Rodriguez, A., Jeuring, J., Jansson, P., Gerdes, A., Kiselyov, O., Oliveira,
-  B.C.d.S.: Comparing libraries for generic programming in haskell. In:
+  B.C.d.S.: Comparing libraries for generic programming in Haskell. In:
   Proceedings of the First ACM SIGPLAN Symposium on Haskell. pp. 111--122.
   Haskell '08, ACM, New York, NY, USA (2008). \doi{10.1145/1411286.1411301}
 
@@ -141,7 +141,7 @@ Yakushev, A.R., Holdermans, S., L\"{o}h, A., Jeuring, J.: Generic programming
 
 \bibitem{Yorgey2012}
 Yorgey, B.A., Weirich, S., Cretin, J., Peyton~Jones, S., Vytiniotis, D.,
-  Magalh\~{a}es, J.P.: Giving haskell a promotion. In: Proceedings of the 8th
+  Magalh\~{a}es, J.P.: Giving Haskell a promotion. In: Proceedings of the 8th
   ACM SIGPLAN Workshop on Types in Language Design and Implementation. pp.
   53--66. TLDI '12, ACM, New York, NY, USA (2012).
   \doi{10.1145/2103786.2103795}

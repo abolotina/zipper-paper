@@ -321,7 +321,7 @@ The following exploits the idea of \emph{pattern matching}. As before, we consid
 \indent\s\s caseShow' t = "(" ++ gshow t ++ ")"
 \vs
 }
-We provide a synonym for the \texttt{CaseShow (Equal a b) a b} instance, which we call \texttt{CaseRecShow}, as before with \texttt{ProofEq}; likewise the synonym for the matching function:
+We provide a synonym for the \texttt{CaseShow (Equal a b) a b} instance, which we call \texttt{CaseRecShow}, as before with \texttt{ProofEq}; likewise a synonym for the matching function:
 \texttt{
 \vs
 \indent caseShow \ann \fa a b. CaseRecShow a b \Ra b \ra String\\
@@ -329,7 +329,7 @@ We provide a synonym for the \texttt{CaseShow (Equal a b) a b} instance, which w
 \vspace{0.2cm}
 }
 
-The resulting function \texttt{gshow} is a subject of a number of constraints abbreviated by \texttt{GShow} synonym:
+The resulting function \texttt{gshow} is a subject of a number of constraints abbreviated by a \texttt{GShow} synonym:
 \texttt{
 \vs
 \indent\textbf{type} GShow a = (Generic a, HasDatatypeInfo a,\\
@@ -365,7 +365,7 @@ This is a consequence of \texttt{gshow} from \textsf{basic-sop} not treating rec
 \section{The generic zipper}
 \label{sec:generic-zipper}
 
-The zipper is a data structure that enables efficient navigation and editing within the tree-like structure of a datatype. It represents a current location in that structure, storing a tree node, a \emph{focus}, along with its context. Having a zipper focused on a recursive knot in a structure, we may produce a new location by moving the focus up, down, left, or right. On the way, we can update the nodes. Entering and laving the navigation usually need a special care.
+The zipper is a data structure that enables efficient navigation and editing within the tree-like structure of a datatype. It represents a current location in that structure, storing a tree node, a \emph{focus}, along with its context. Having a zipper focused on a recursive knot in a structure, we may produce a new location by moving the focus up, down, left, or right. On the way, we can update the nodes. Entering and leaving the navigation usually need a special care.
 
 The classical zipper described by Huet~\cite{Huet1997} can be generically calculated for regular datatypes~\cite{HiJeLo2004}---a subset of datatypes that can be viewed as a least fixed point of some polynomial expression on types. Yakushev~et~al.~\cite{MuRec2009} generalize the definition of the generic zipper for an arbitrary family of mutually recursive datatypes. All mentioned solutions require a datatype to be expressed using forms of a fixed-point operator, since the zipper operates on recursion points. 
 
@@ -412,7 +412,7 @@ The function signature of \texttt{enter} specifies the constraints necessary to 
 
 The \texttt{leave} function ends navigation moving up to the root and returns its modified value. 
 
-The \texttt{update} function modifies the focal subtree with a given constrained function. The type in focus is existentially quantified inside \texttt{Loc} and should satisfy constraint \texttt{c}. The structure of \texttt{Loc} (shown in Section~\ref{ss:locs}) guarantees that the constraint holds for all types in the family \texttt{fam} and, therefore, for all recursive nodes that can be in focus, hence \texttt{update} can always be applied.
+The \texttt{update} function modifies the focal subtree with a given constrained function. The type in focus is existentially quantified inside \texttt{Loc} and should satisfy the constraint \texttt{c}. The structure of \texttt{Loc} (shown in Section~\ref{ss:locs}) guarantees that the constraint holds for all types in the family \texttt{fam} and, therefore, for all recursive nodes that can be in focus, hence \texttt{update} can always be applied.
 
 Consider the following example of usage of the interface. Define a pair of mutually recursive datatypes for a rose tree and a forest, where the forest is a list of trees, and the tree is defined as a value in a node and a forest of its children:
 \texttt{
@@ -503,7 +503,7 @@ The wrapper incapsulates the proofs about a number of important properties of a 
 }
 Existential type variable \texttt{b} represents the type of a focus. We apply a number of predicates to \texttt{b}, hence we can implement the steps of the navigation not knowing the actual type of a focus. Firstly, the type of a focus should have the \texttt{Generic} representation. Secondly, it should live \texttt{In} the list of types we are going to visit. Lastly, it ought to satisfy the set of constraints for the whole zipper interface captured by the \texttt{ZipperI} predicate. In particular, the predicate ensures that \texttt{a} is the type of the parent for the focus in the structure under consideration.
 
-We implement the \texttt{In} constraint by means of a type family \texttt{InFam} exactly along the lines of \texttt{Equal} family defined in the beginning of Section~\ref{sec:handling-recursion}. 
+We implement the \texttt{In} constraint by means of a type family \texttt{InFam} exactly along the lines of the \texttt{Equal} type family defined in the beginning of Section~\ref{sec:handling-recursion}. 
 %~ The following checks a type for membership of a type-level list that we use to express a family:
 %~ \texttt{
 %~ \vs
@@ -521,7 +521,7 @@ We implement the \texttt{In} constraint by means of a type family \texttt{InFam}
 }
 The definition of \texttt{InFam} is omitted as a boring one.
 
-One last missing piece for managing focuses is the class \texttt{ProofIn}. it provides a proof of membership of a focus type to a family. Again, this generalizes the proof of type equality from Section~\ref{sec:handling-recursion}. The definitions of \texttt{ProofIn} and an auxiliary class \texttt{ProofFam} are given in Figure~\ref{fig:proof-in}. 
+One last missing piece for managing focuses is the class \texttt{ProofIn}. It provides a proof of membership of a focus type to a family. Again, this generalizes the proof of type equality from Section~\ref{sec:handling-recursion}. The definitions of \texttt{ProofIn} and an auxiliary class \texttt{ProofFam} are given in Figure~\ref{fig:proof-in}. 
 %The constraints on the second \texttt{ProofFam} instance, which repeat the same ones from the \texttt{Family} constructor, constitute the proof.
 % this is not clear and, I think, can be omitted
 
@@ -797,7 +797,7 @@ We have established the mechanism of translation, which is cumbersome but verify
 
 There are many works that contribute to datatype-generic programming. Rodriguez et al.~\cite{Rodriguez2008} and Magalh{\~{a}}es and L{\"{o}}h~\cite{MagLoeh2012} review a number of existing approaches and provide their detailed comparison in various aspects. There are several generic views that use certain forms of the fixed point operator to express recursion in a datatype structure~\cite{VanNoort2008,MuRec2009,Jansson1997,Loeh2011}. And there are a number of approaches that do not make use of fixed points~\cite{Chakravarty2009,Cheney2002,Magalhaes2010,Weirich2006}, but explicitly encode recursion in the datatype representation. The SOP view~\cite{VriLoeh2014}, which we use to demonstrate our technique, is an approach to generic programming that does not reflect recursive positions in the generic representation of a datatype. This approach uses heterogeneous lists of types to encode sums and products in the generic representation.
 
-The idea similar to SOP has been proposed by Kiselyov~et~al.~\cite{Kiselyov2004} in their \textsf{HList} library for strongly typed heterogeneous collections. In the paper, the authors also discuss problems connected with overlap, which they use for access operations. Another Haskell extension, functional dependencies, is applied to restrict overlap in type equality there, which resembles our solution.
+The idea similar to SOP has been proposed by Kiselyov~et~al.~\cite{Kiselyov2004} in their \textsf{HList} library for strongly typed heterogeneous collections. In the paper, the authors also discuss problems connected with overlap, which they use for access operations. Another Haskell extension, functional dependencies, is applied to restrict overlap by introducing a class for type equality there, which resembles our solution.
 
 Morris and Jones~\cite{Morris2010} introduce the type-class system \textsf{ilab}, based on the Haskell 98 class system, with a new feature called ``instance chains''. This enables one to control overlap by using an explicit syntax in instance declarations. The approach resembles if-else chains. But the use of instance chains and local use of overlap leave code error-prone as a consequence of type class openness. Closed type families~\cite{Eisenberg2014} were recently introduced in Haskell to solve the overlap problem.
 
