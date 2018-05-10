@@ -279,7 +279,7 @@ We now return to our running example from Section~\ref{sec:recursion-problem}. W
 \vs
 }
 
-For every element in a list of all direct subterms of a term we shall provide a proof object witnessing its type (in)equality to the type of the term. This can be done by means of the \texttt{All} combinator and partially applied auxiliary type class \texttt{ProofEq} which abbreviates heavy-weighted interface of \texttt{Proof}:
+For every element in a list of all direct subterms of a term we shall provide a proof object witnessing its type (in)equality to the type of the term. This can be done by means of the \texttt{All} combinator and partially applied auxiliary type class \texttt{ProofEq}, which abbreviates the heavy-weighted interface of \texttt{Proof}:
 \texttt{
 \vs
 \indent\textbf{class}\ind Proof (Equal a b) a b \Ra ProofEq a b\\
@@ -365,19 +365,14 @@ This is a consequence of \texttt{gshow} from \textsf{basic-sop} not treating rec
 \section{The generic zipper}
 \label{sec:generic-zipper}
 
-The zipper is a data structure that enables efficient navigation and editing within the tree-like structure of a datatype. It represents a current location in that structure, storing a tree node, a \emph{focus}, along with its context. 
-%that consists of surroundings of the focal subtree.
+The zipper is a data structure that enables efficient navigation and editing within the tree-like structure of a datatype. It represents a current location in that structure, storing a tree node, a \emph{focus}, along with its context. Having a zipper focused on a recursive knot in a structure, we may produce a new location by moving the focus up, down, left, or right. On the way, we can update the nodes. Entering and laving the navigation usually need a special care.
 
 The classical zipper described by Huet~\cite{Huet1997} can be generically calculated for regular datatypes~\cite{HiJeLo2004}---a subset of datatypes that can be viewed as a least fixed point of some polynomial expression on types. Yakushev~et~al.~\cite{MuRec2009} generalize the definition of the generic zipper for an arbitrary family of mutually recursive datatypes. All mentioned solutions require a datatype to be expressed using forms of a fixed-point operator, since the zipper operates on recursion points. 
 
-Our approach allows to define the generic zipper using a representation that does not exploit a fixed point. In this section, we implement the generic zipper interface that includes functions for manipulating locations for mutually recursive datatypes using the SOP view.
+In this section, we describe our approach allowing one to define the generic zipper out of a representation that does not exploit a fixed point. We start with the generic zipper interface and an example of how it can be used (Section~\ref{ss:zip-interface}). Then, we turn to the type-level machinery employed to define locations inside mutually recursive datatypes using the SOP view  (Section~\ref{ss:locs}). Finally, we discuss the implementation of the generic zipper interface~--- the functions for manipulating locations (Section~\ref{ss:zip-impl}).
 
 \subsection{Interface and usage}
-
-Having a zipper focused on one of recursive knots in a structure, we may produce a new location by moving the focus up, down, left, or right.
-%for the zipper for mutually recursive datatypes, this means 
-%recursion points of the total structure of a family
-We start with the generic zipper interface for those operations and an example of how it can be used, then proceed to the implementation.
+\label{ss:zip-interface}
 
 The interface we provide for the generic zipper is shown on Figure~\ref{fig:zipper-interface}. It comprises the functions for \emph{movement}, \emph{starting} and \emph{ending navigation}, and \emph{updating} the focus, which are defined over the location structure.
 \begin{figure}[t]
@@ -492,11 +487,14 @@ The location structure consists of a focal subtree, which is one of the mutually
 \indent\ind\s\s\ra Loc r fam c
 \vs
 }
-The subtree in focus is wrapped by the \texttt{Family} datatype that we use to prove its required properties, while we do not know the current type of the node in focus. For being able to move up in the tree, we keep the type that will be obtained by uniting the current focus and context (essentially, the type of the focal node's parent in the tree): that type is unknown outside the location, and is reflected in the type parameters of \texttt{Family} and the \texttt{Contexts} datatype of the context by the type variable \texttt{a} that is existential in the \texttt{Loc} datatype; the type of the focal subtree itself is existential in \texttt{Family}. The other type parameters \texttt{r}, \texttt{fam}, and \texttt{c} in \texttt{Loc} mean the root type of the tree, the list of types constituting the family, and the constraint constructor imposing restrictions on the family's types, respectively.
+The type parameters \texttt{r}, \texttt{fam}, and \texttt{c} in \texttt{Loc} correspond to the root type of the tree, the list of types of nodes to visit, and a constraint imposing restrictions on the types in the list, respectively. Also, the single constructor is existentially quantified over one more type variable, \texttt{a}, for we need to store a type of the focus' parent to be able to move up successively in a tree-like structure. We discuss both term parameters of the constructor of \texttt{Loc} in detail below. 
 
 \subsubsection{Families}
 
-We define the \texttt{Family} datatype as a GADT, with embedded constraints on its constructor:
+The subtree in a focus is wrapped by the \texttt{Family} datatype. 
+The wrapper incapsulates the proofs about a number of important properties of a focus.
+We define the \texttt{Family} datatype as a GADT, with embedded 
+constraints on its constructor:
 \texttt{
 \vs
 \indent data Family (r \ann *) (a \ann *) (fam \ann [*])\\
@@ -640,6 +638,7 @@ We finally define \texttt{Context} as a newtype wrapping the result of the compu
 The \texttt{CtxCode} type is the computed type of the context for the given code of a datatype. We will use this type synonym further when defining constraints for functions providing the generic zipper interface.
 
 \subsection{Implementing the zipper interface}
+\label{ss:zip-impl}
 
 We now can implement the interface functions of the zipper, which we have previously described. We only demonstrate the implementation of the \texttt{goDown} function here. This shows the idea of how we can use our idiom for defining the zipper functions, and the source code with the full implementation of the zipper interface is available at our \textsf{GitHub} repository\footnote{\url{https://github.com/Maryann13/Zipper}}.
 
@@ -791,7 +790,7 @@ We have established the mechanism of translation, which is cumbersome but verify
 \section{Related work}
 \label{sec:related-work}
 
-There are many works that contribute to datatype-generic programming, and a lot of knowledge has been accumulated. Rodriguez et al.~\cite{Rodriguez2008} and Magalh{\~{a}}es and L{\"{o}}h~\cite{MagLoeh2012} review a number of existing approaches and provide their detailed comparison in various aspects. There are several generic views that use certain forms of the fixed point operator to express recursion in a datatype structure~\cite{VanNoort2008,MuRec2009,Jansson1997,Loeh2011}. And there are a number of approaches that do not make use of fixed points~\cite{Chakravarty2009,Cheney2002,Magalhaes2010,Weirich2006}, but explicitly encode recursion in the datatype representation. The SOP view~\cite{VriLoeh2014}, which we use to demonstrate our technique, is an approach to generic programming that does not reflect recursive positions in the generic representation of a datatype. This approach uses heterogeneous lists of types to encode sums and products in the generic representation.
+There are many works that contribute to datatype-generic programming. Rodriguez et al.~\cite{Rodriguez2008} and Magalh{\~{a}}es and L{\"{o}}h~\cite{MagLoeh2012} review a number of existing approaches and provide their detailed comparison in various aspects. There are several generic views that use certain forms of the fixed point operator to express recursion in a datatype structure~\cite{VanNoort2008,MuRec2009,Jansson1997,Loeh2011}. And there are a number of approaches that do not make use of fixed points~\cite{Chakravarty2009,Cheney2002,Magalhaes2010,Weirich2006}, but explicitly encode recursion in the datatype representation. The SOP view~\cite{VriLoeh2014}, which we use to demonstrate our technique, is an approach to generic programming that does not reflect recursive positions in the generic representation of a datatype. This approach uses heterogeneous lists of types to encode sums and products in the generic representation.
 
 The idea similar to SOP has been proposed by Kiselyov~et~al.~\cite{Kiselyov2004} in their \textsf{HList} library for strongly typed heterogeneous collections. In the paper, the authors also discuss problems connected with overlap, which they use for access operations. Another Haskell extension, functional dependencies, is applied to restrict overlap in type equality there, which resembles our solution.
 
