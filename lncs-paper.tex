@@ -484,7 +484,7 @@ Our zipper applies to regular datatypes as well. In that case, \texttt{fam} list
 \subsection{Locations}
 \label{ss:locs}
 
-The location structure consists of the focal subtree, which is one of the mutually recursive nodes of total structure of the family of datatypes, and its surrounding context. We give the following definition of the datatype \texttt{Loc} for locations:
+The location structure consists of a focal subtree, which is one of the mutually recursive nodes of the whole structure of the family of datatypes, and its surrounding context:
 \texttt{
 \vs
 \indent data Loc (r \ann *) (fam \ann [*]) (c \ann * \ra Constraint) where\\
