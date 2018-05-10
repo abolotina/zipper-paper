@@ -436,7 +436,7 @@ Updating the trees can be done through a class:
 }
 This replaces a tree node with a given tree, and, for the forests, this leaves the nodes untouched.
 
-For chaining moves and edits, we can follow Yakushev~et~al.~\cite{MuRec2009} and employ  the flipped function composition \comp~and Kleisli composition \kleisli. The latter one is instantiated with the \texttt{Maybe} monad that wraps the result type of the movement functions.
+For chaining moves and edits, we can follow Yakushev~et~al.~\cite{MuRec2009} and employ  the flipped function composition \comp~and Kleisli composition \kleisli. The latter is instantiated with the \texttt{Maybe} monad that wraps the result type of the movement functions.
 \texttt{
 \vs
 \indent (\comp) \ann (a \ra b) \ra (b \ra c) \ra (a \ra c)\\
@@ -483,22 +483,22 @@ The location structure consists of a focal subtree, which is one of the mutually
 \texttt{
 \vs
 \indent data Loc (r \ann *) (fam \ann [*]) (c \ann * \ra Constraint) where\\
-\indent\s\s Loc \ann\hs Family r a fam c \ra Contexts r a fam c\\
+\indent\s\s Loc \ann\hs Focus r a fam c \ra Contexts r a fam c\\
 \indent\ind\s\s\ra Loc r fam c
 \vs
 }
 The type parameters \texttt{r}, \texttt{fam}, and \texttt{c} in \texttt{Loc} correspond to the root type of the tree, the list of types of nodes to visit, and a constraint imposing restrictions on the types in the list, respectively. Also, the single constructor is existentially quantified over one more type variable, \texttt{a}, for we need to store a type of the focus' parent to be able to move up successively in a tree-like structure. We discuss both term parameters of the constructor of \texttt{Loc} in detail below. 
 
-\subsubsection{Families}
+\subsubsection{Focus}
 
-The subtree in a focus is wrapped by the \texttt{Family} datatype. 
+The subtree in a focus is wrapped by the \texttt{Focus} datatype. 
 The wrapper incapsulates the proofs about a number of important properties of a focus.
 \texttt{
 \vs
-\indent data Family (r \ann *) (a \ann *) (fam \ann [*])\\
+\indent data Focus (r \ann *) (a \ann *) (fam \ann [*])\\
 \indent\ind\ind\ind (c \ann * \ra Constraint) where\\
-\indent\s\s Family \ann\hs (Generic b, In b fam, ZipperI r a b fam c)\\
-\indent\ind\ind\s\Ra b \ra Family r a fam c
+\indent\s\s Focus \ann\hs (Generic b, In b fam, ZipperI r a b fam c)\\
+\indent\ind\ind\s\Ra b \ra Focus r a fam c
 \vs
 }
 Existential type variable \texttt{b} represents the type of a focus. We apply a number of predicates to \texttt{b}, hence we can implement the steps of the navigation not knowing the actual type of a focus. Firstly, the type of a focus should have the \texttt{Generic} representation. Secondly, it should live \texttt{In} the list of types we are going to visit. Lastly, it ought to satisfy the set of constraints for the whole zipper interface captured by the \texttt{ZipperI} predicate. In particular, the predicate ensures that \texttt{a} is the type of the parent for the focus in the structure under consideration.
@@ -521,7 +521,7 @@ We implement the \texttt{In} constraint by means of a type family \texttt{InFam}
 }
 The definition of \texttt{InFam} is omitted as a boring one.
 
-One last missing piece for managing focuses is the class \texttt{ProofIn}. It provides a proof of membership of a focus type to a family. Again, this generalizes the proof of type equality from Section~\ref{sec:handling-recursion}. The definitions of \texttt{ProofIn} and an auxiliary class \texttt{ProofFam} are given in Figure~\ref{fig:proof-in}. 
+One last missing piece for managing focuses is the class \texttt{ProofIn}. It provides a proof of membership of a focus type to a family. Again, this generalizes the proof of type equality from Section~\ref{sec:handling-recursion}. The definitions of \texttt{ProofIn} and an auxiliary class \texttt{ProofFocus} are given in Figure~\ref{fig:proof-in}. 
 %The constraints on the second \texttt{ProofFam} instance, which repeat the same ones from the \texttt{Family} constructor, constitute the proof.
 % this is not clear and, I think, can be omitted
 
@@ -529,19 +529,19 @@ One last missing piece for managing focuses is the class \texttt{ProofIn}. It pr
 \centering
 \normalsize
 \begin{tabular}{l}
-\tt class ProofFam (inFam \ann Bool) (r \ann *) (a \ann *) (b \ann *)\\
+\tt class ProofFocus (inFam \ann Bool) (r \ann *) (a \ann *) (b \ann *)\\
 \tt\ind\ind\ind\s\s\s (fam \ann [*]) (c \ann * \ra Constraint) where\\
-\tt\s\s witness \ann b \ra Maybe (Family r a fam c)
+\tt\s\s witness \ann b \ra Maybe (Focus r a fam c)
 \vs
-\tt instance ProofFam 'False r a b fam c where\\
+\tt instance ProofFocus 'False r a b fam c where\\
 \tt\s\s witness \_ \hs\nths= Nothing\\
 \tt instance (Generic b, In b fam, ZipperI r a b fam c)\\
-\tt\ind\Ra ProofFam 'True r a b fam c where\\
-\tt\s\s witness\s\s\s = Just . Family
+\tt\ind\Ra ProofFocus 'True r a b fam c where\\
+\tt\s\s witness\s\s\s = Just . Focus
 \vs
-\tt class ProofFam (InFam b fam) r a b fam c\\
+\tt class ProofFocus (InFam b fam) r a b fam c\\
 \tt\ind\Ra ProofIn r a b fam c\\
-\tt instance ProofFam (InFam b fam) r a b fam c\\
+\tt instance ProofFocus (InFam b fam) r a b fam c\\
 \tt\ind\Ra ProofIn r a b fam c
 \end{tabular}
 \caption{Proof of membership of a family of datatypes.}
@@ -561,7 +561,7 @@ When we focus on a particular node in a data structure, having the surrounding c
 \indent\ind\s\s\s\ra Contexts r a fam c
 \vs
 }
-This has the shape similar to the previously defined \texttt{Loc} and \texttt{Family} datatypes: it keeps the types of the root and of the immediate parent of the focal node (of the union with the focal subtree when that plugs the hole)---as ensured by sharing that type with \texttt{Family} in the \texttt{Loc} constructor. The \texttt{ZipperI} constraint with the type \texttt{x} of the previous context frame here indicates that the constraint for the zipper holds after plugging the hole, so all the properties, conversely, can be proved by induction for the focus type when it moves down in the tree adding new contexts onto the stack---and the \texttt{CNil} constructor for an empty context with the \texttt{r} and \texttt{a} types equal is the inductive basis in that proof. Note that the type of the current focus is not reflected in the \texttt{Contexts} datatype, as we do not need that.
+This has the shape similar to the previously defined \texttt{Loc} and \texttt{Focus} datatypes: it keeps the types of the root and of the immediate parent of the focal node (of the union with the focal subtree when that plugs the hole)---as ensured by sharing that type with \texttt{Focus} in the \texttt{Loc} constructor. The \texttt{ZipperI} constraint with the type \texttt{x} of the previous context frame here indicates that the constraint for the zipper holds after plugging the hole, so all the properties, conversely, can be proved by induction for the focus type when it moves down in the tree adding new contexts onto the stack---and the \texttt{CNil} constructor for an empty context with the \texttt{r} and \texttt{a} types equal is the inductive basis in that proof. Note that the type of the current focus is not reflected in the \texttt{Contexts} datatype, as we do not need that.
 
 \subsubsection{Type-level Differentiation}
 
@@ -651,7 +651,7 @@ To move focus down to the leftmost child of the current focal node in the tree, 
 \texttt{
 \vs
 \indent goDown \ann Loc a fam c \ra Maybe (Loc a fam c)\\
-\indent goDown (Loc (Family t) cs)\\
+\indent goDown (Loc (Focus t) cs)\\
 \indent\s\s = case toFirst t of\\
 \indent\ind\s\s Just t' \ra Just \$ Loc t' (Ctxs (toFirstCtx t) cs)\\
 \indent\ind\s\s\_\ind\s\s\s\hs\ra Nothing
@@ -664,7 +664,7 @@ The function \texttt{toFirst} returns its result in the \texttt{Maybe} monad, an
 \normalsize
 \begin{tabular}{l}
 \tt toFirst \ann\hs\fa fam c r a. (Generic a, ToFirst r a fam c)\\
-\tt\ind\ind\Ra a \ra Maybe (Family r a fam c)\\
+\tt\ind\ind\Ra a \ra Maybe (Focus r a fam c)\\
 \tt toFirst t = appToNP @AllProof toFirstNP \$ unSOP \$ from t
 \vspace{0.3cm}\\
 \bf Proof
@@ -677,7 +677,7 @@ The function \texttt{toFirst} returns its result in the \texttt{Maybe} monad, an
 \bf Processing products
 \vs
 \tt toFirstNP \ann\hs\fa fam c r a xs. All (ProofIn r a fam c) xs\\
-\tt\ind\ind\s\s\Ra NP I xs \ra Maybe (Family r a fam c)\\
+\tt\ind\ind\s\s\Ra NP I xs \ra Maybe (Focus r a fam c)\\
 \tt toFirstNP (I (x \ann b) :* xs)\\
 \tt\s\s = witness @(InFam b fam) x `mplus` toFirstNP xs\\
 \tt toFirstNP Nil = Nothing
