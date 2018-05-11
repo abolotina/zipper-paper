@@ -550,7 +550,9 @@ One last missing piece for managing focuses is the class \texttt{ProofIn}. It pr
 
 \subsubsection{Contexts}
 
-When we focus on a particular node in a data structure, having the surrounding context of that node is enough to reconstruct the entire structure. The context for the tree's location has the shape of the original structure of that tree but with one hole at the place of its focus, whence it is sometimes called a \emph{one-hole context}. The context can be expressed as a stack (\texttt{Contexts} below), where each frame \texttt{Context} corresponds to the particular node with a hole: it ascends from the focal node keeping its siblings, the siblings of its parent, and until it reaches the root node, through all levels in the tree. So the stack of contexts essentially reflects the track of the movement in the structure.
+A focus on a particular node, augmented with surrounding context of that node, is enough to reconstruct the entire structure. Therefore, the context of a location has the shape of the original structure but with one hole at the place of its focus. This is sometimes called a \emph{one-hole context}. 
+
+The context can be expressed as a stack, called \texttt{Contexts}, and each frame, \texttt{Context}, corresponds to the particular node with a hole. The stack ascends from the focal node keeping its siblings, the siblings of its parent, etc., until it reaches the root node. So the stack of contexts, essentially, reflects the track of the movement inside the structure.
 \texttt{
 \vs
 \indent data Contexts (r \ann *) (a \ann *) (fam \ann [*])\\
@@ -561,7 +563,9 @@ When we focus on a particular node in a data structure, having the surrounding c
 \indent\ind\s\s\s\ra Contexts r a fam c
 \vs
 }
-This has the shape similar to the previously defined \texttt{Loc} and \texttt{Focus} datatypes: it keeps the types of the root and of the immediate parent of the focal node (of the union with the focal subtree when that plugs the hole)---as ensured by sharing that type with \texttt{Focus} in the \texttt{Loc} constructor. The \texttt{ZipperI} constraint with the type \texttt{x} of the previous context frame here indicates that the constraint for the zipper holds after plugging the hole, so all the properties, conversely, can be proved by induction for the focus type when it moves down in the tree adding new contexts onto the stack---and the \texttt{CNil} constructor for an empty context with the \texttt{r} and \texttt{a} types equal is the inductive basis in that proof. Note that the type of the current focus is not reflected in the \texttt{Contexts} datatype, as we do not need that.
+The type parameters have the same meaning as for the \texttt{Loc} datatype. The \texttt{ZipperI} constraint with the type \texttt{x} of the previous context frame indicates that the constraint for the zipper holds after plugging the focus in the hole. Therefore, all the properties can be proved by induction for the focus type when it moves down in the tree adding new contexts onto the stack. The \texttt{CNil} constructor for an empty context, with the \texttt{r} and \texttt{a} types being equal, forms the inductive basis in that kind of proof. 
+
+Note that the type of the current focus is not reflected in the \texttt{Contexts} datatype.
 
 \subsubsection{Type-level Differentiation}
 
@@ -597,7 +601,11 @@ McBride~\cite{McBride2001} studies a relation between the one-hole context defin
 
 The addition operation just appends two type-level lists of lists (sums of products), multiplication by a type adds the type to the head of each inner list of the sum (here we see multiplication of a product and the distributive property of multiplication over addition, just as in arithmetic of numbers), and multiplication by a product appends the list to the head of each inner product of the sum. Again, kind \texttt{[*]} here denotes products, and \texttt{[[*]]} denotes sums (of products), so the relation with arithmetic of numbers in these definitions becomes more clear if one realizes that an empty sum \texttt{'[] \ann [[*]]} corresponds to $1$, and an empty product \texttt{'[] \ann [*]} corresponds to $0$. We also specify, through the \texttt{infixr} declaration, that multiplication has a higher priority than addition.
 
-Using the defined operations, we can implement differentiation of a product of types. The definition of differentiation shown in Figure~\ref{fig:diff-prod} resembles its analogue from calculus, but it is now generalized for the setting of families of datatypes: the differentiation of the single type reflected by a one-element list here results in $0$ (reflected by \texttt{'[]}) if that is not in the family and hence is regarded as a constant, otherwise it results in $1$. When differentiation gives $1$, it is actually the hole, which we express by defining the unit type \texttt{Hole}. Reflecting this type in the context is helpful when we traverse the context representation to plug the hole. We use the empty type \texttt{End} to distinguish the case when the hole is found at the end of the list, in order not to add that into the result twice. The sum \texttt{'[ '[]]} represents a unit type that is exactly $1$. We also use type-level \texttt{If} that returns its second argument for \texttt{'True}, and the third one otherwise. We do not give its definition here, as it is straightforward.
+\subsubsection{Context Frame}
+
+At this point, we can implement differentiation of a product of types and, therefore, the computation of a context frame type. 
+
+The definition of differentiation shown in Figure~\ref{fig:diff-prod} resembles its analogue from calculus, but it is now generalized for the setting of families of datatypes: the differentiation of the single type reflected by a one-element list here results in $0$ (reflected by \texttt{'[]}) if that is not in the family and hence is regarded as a constant, otherwise it results in $1$. When differentiation gives $1$, it is actually the hole, which we express by defining the unit type \texttt{Hole}. Reflecting this type in the context is helpful when we traverse the context representation to plug the hole. We use the empty type \texttt{End} to distinguish the case when the hole is found at the end of the list, in order not to add that into the result twice. The sum \texttt{'[ '[]]} represents a unit type that is exactly $1$. We also use type-level \texttt{If} that returns its second argument for \texttt{'True}, and the third one otherwise. We do not give its definition here, as it is straightforward.
 \begin{figure}[t]
 \centering
 \normalsize
@@ -632,7 +640,7 @@ The following completes the computation of the context type:
 }
 The type family \texttt{ToContext} derives the type of the context of a datatype performing differentiation of a sum on its code. Since each product from the code matches a sum of multiple products in the context, it is helpful for each product of the context representation, to keep the index of its matching constructor of the datatype. We store the index in the datatype \texttt{ConsN} adding that to the head of each product but wrapped by \texttt{Proxy} because we use \texttt{ConsN} promoted to a kind in the type family, while the products contain types of kind \texttt{*}. The constructors \texttt{F} and \texttt{N} denote ``first'' and ``next'', respectively, and the special constructor \texttt{None} will be used further to indicate failure of matching indices.
 
-We finally define \texttt{Context} as a newtype wrapping the result of the computation, as it allows GHC to perform type inference for the context type, where it is possible, to avoid extra type applications for defining the zipper operations.
+Finally, a context frame has two representations: as a type synonym and as a newtype wrapper
 \texttt{
 \vs
 \indent type CtxCode  fam a = ToContext 'F fam (Code a)
@@ -640,7 +648,7 @@ We finally define \texttt{Context} as a newtype wrapping the result of the compu
 \indent newtype Context fam a = Ctx \{ctx \ann SOP I (CtxCode fam a)\}
 \vs
 }
-The \texttt{CtxCode} type is the computed type of the context for the given code of a datatype. We will use this type synonym further when defining constraints for functions providing the generic zipper interface.
+The wrapper allows GHC to perform type inference where it is doomed to fail with a plain type synonym. On the other hand, the \texttt{CtxCode} type comes handy in constraints applied to the generic zipper interface functions.
 
 \subsection{Implementing the zipper interface}
 \label{ss:zip-impl}
@@ -795,7 +803,7 @@ We have established the mechanism of translation, which is cumbersome but verify
 \section{Related work}
 \label{sec:related-work}
 
-There are many works that contribute to datatype-generic programming. Rodriguez et al.~\cite{Rodriguez2008} and Magalh{\~{a}}es and L{\"{o}}h~\cite{MagLoeh2012} review a number of existing approaches and provide their detailed comparison in various aspects. There are several generic views that use certain forms of the fixed point operator to express recursion in a datatype structure~\cite{VanNoort2008,MuRec2009,Jansson1997,Loeh2011}. And there are a number of approaches that do not make use of fixed points~\cite{Chakravarty2009,Cheney2002,Magalhaes2010,Weirich2006}, but explicitly encode recursion in the datatype representation. The SOP view~\cite{VriLoeh2014}, which we use to demonstrate our technique, is an approach to generic programming that does not reflect recursive positions in the generic representation of a datatype. This approach uses heterogeneous lists of types to encode sums and products in the generic representation.
+There are many works that contribute to the datatype-generic programming. Rodriguez et al.~\cite{Rodriguez2008} and Magalh{\~{a}}es and L{\"{o}}h~\cite{MagLoeh2012} review a number of existing approaches and provide their detailed comparison in various aspects. There are several generic views that use certain forms of the fixed point operator to express recursion in a datatype structure~\cite{VanNoort2008,MuRec2009,Jansson1997,Loeh2011}. And there are a number of approaches that do not make use of fixed points~\cite{Chakravarty2009,Cheney2002,Magalhaes2010,Weirich2006}, but explicitly encode recursion in the datatype representation. The SOP view~\cite{VriLoeh2014}, which we use to demonstrate our technique, is an approach to generic programming that does not reflect recursive positions in the generic representation of a datatype. This approach uses heterogeneous lists of types to encode sums and products in the generic representation.
 
 The idea similar to SOP has been proposed by Kiselyov~et~al.~\cite{Kiselyov2004} in their \textsf{HList} library for strongly typed heterogeneous collections. In the paper, the authors also discuss problems connected with overlap, which they use for access operations. Another Haskell extension, functional dependencies, is applied to restrict overlap by introducing a class for type equality there, which resembles our solution.
 
