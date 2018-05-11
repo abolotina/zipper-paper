@@ -244,7 +244,7 @@ To make the whole solution work, we need to propagate the constraints all the wa
 \vspace{0.2cm}
 }
 
-Although, the approach works, as exemplified by a number of the packages on Hackage, we aim for release of generic programs from overlap. This would remove the complexity overhead introduced by the approach, as we have mentioned in the introduction.
+Although the approach works, as exemplified by a number of the packages on Hackage, we aim for release of generic programs from overlap. This would remove the complexity overhead introduced by the approach, as we have mentioned in the introduction.
 
 
 \section{Handling recursion with closed type families}
@@ -496,9 +496,9 @@ The wrapper incapsulates the proofs about a number of important properties of a 
 \texttt{
 \vs
 \indent data Focus (r \ann *) (a \ann *) (fam \ann [*])\\
-\indent\ind\ind\ind (c \ann * \ra Constraint) where\\
+\indent\ind\ind\s\s\s (c \ann * \ra Constraint) where\\
 \indent\s\s Focus \ann\hs (Generic b, In b fam, ZipperI r a b fam c)\\
-\indent\ind\ind\s\Ra b \ra Focus r a fam c
+\indent\ind\ind\Ra b \ra Focus r a fam c
 \vs
 }
 Existential type variable \texttt{b} represents the type of a focus. We apply a number of predicates to \texttt{b}, hence we can implement the steps of the navigation not knowing the actual type of a focus. Firstly, the type of a focus should have the \texttt{Generic} representation. Secondly, it should live \texttt{In} the list of types we are going to visit. Lastly, it ought to satisfy the set of constraints for the whole zipper interface captured by the \texttt{ZipperI} predicate. In particular, the predicate ensures that \texttt{a} is the type of the parent for the focus in the structure under consideration.
@@ -530,7 +530,7 @@ One last missing piece for managing focuses is the class \texttt{ProofIn}. It pr
 \normalsize
 \begin{tabular}{l}
 \tt class ProofFocus (inFam \ann Bool) (r \ann *) (a \ann *) (b \ann *)\\
-\tt\ind\ind\ind\s\s\s (fam \ann [*]) (c \ann * \ra Constraint) where\\
+\tt\ind\ind\ind\ind\s (fam \ann [*]) (c \ann * \ra Constraint) where\\
 \tt\s\s witness \ann b \ra Maybe (Focus r a fam c)
 \vs
 \tt instance ProofFocus 'False r a b fam c where\\
@@ -550,7 +550,7 @@ One last missing piece for managing focuses is the class \texttt{ProofIn}. It pr
 
 \subsubsection{Contexts}
 
-A focus on a particular node, augmented with surrounding context of that node, is enough to reconstruct the entire structure. Therefore, the context of a location has the shape of the original structure but with one hole at the place of its focus. This is sometimes called a \emph{one-hole context}. 
+A focus on a particular node, augmented with a surrounding context of that node, is enough to reconstruct the entire structure. Therefore, the context of a location has the shape of the original structure but with one hole at the place of its focus. This is sometimes called a \emph{one-hole context}. 
 
 The context can be expressed as a stack, called \texttt{Contexts}, and each frame, \texttt{Context}, corresponds to the particular node with a hole. The stack ascends from the focal node keeping its siblings, the siblings of its parent, etc., until it reaches the root node. So the stack of contexts, essentially, reflects the track of the movement inside the structure.
 \texttt{
@@ -605,7 +605,7 @@ The addition operation just appends two type-level lists of lists (sums of produ
 
 At this point, we can implement differentiation of a product of types and, therefore, the computation of a context frame type. 
 
-The definition of differentiation shown in Figure~\ref{fig:diff-prod} resembles its analogue from calculus, but it is now generalized for the setting of families of datatypes: the differentiation of the single type reflected by a one-element list here results in $0$ (reflected by \texttt{'[]}) if that is not in the family and hence is regarded as a constant, otherwise it results in $1$. When differentiation gives $1$, it is actually the hole, which we express by defining the unit type \texttt{Hole}. Reflecting this type in the context is helpful when we traverse the context representation to plug the hole. We use the empty type \texttt{End} to distinguish the case when the hole is found at the end of the list, in order not to add that into the result twice. The sum \texttt{'[ '[]]} represents a unit type that is exactly $1$. We also use type-level \texttt{If} that returns its second argument for \texttt{'True}, and the third one otherwise. We do not give its definition here, as it is straightforward.
+The definition of differentiation, shown in Figure~\ref{fig:diff-prod}, resembles its analogue from calculus, but it is now generalized for the setting of families of datatypes: the differentiation of the single type reflected by a one-element list here results in $0$ (reflected by \texttt{'[]}) if that is not in the family and hence is regarded as a constant, otherwise it results in $1$. When differentiation gives $1$, it is actually the hole, which we express by defining the unit type \texttt{Hole}. Reflecting this type in the context is helpful when we traverse the context representation to plug the hole. We use the empty type \texttt{End} to distinguish the case when the hole is found at the end of the list, in order not to add that into the result twice. The sum \texttt{'[ '[]]} represents a unit type that is exactly $1$. We also use type-level \texttt{If} that returns its second argument for \texttt{'True}, and the third one otherwise. We do not give its definition here, as it is straightforward.
 \begin{figure}[t]
 \centering
 \normalsize
