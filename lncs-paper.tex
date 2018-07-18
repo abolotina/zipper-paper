@@ -34,6 +34,7 @@
 \newcommand{\comps}{\comp\s}
 \newcommand{\kleislis}{\kleisli\s}
 \newcommand{\ann}{:\nhs:\s}
+\newcommand{\ds}{.\nhs.\nhs.}
 
 
 \begin{document}
@@ -94,12 +95,12 @@ The overlap problem also strikes in the security setting when code is compiled a
 We feel both existing approaches unsatisfactory and make the following contributions.
 \begin{itemize}
 \item We describe the problem with the current approach of SOP in detail (Section~\ref{sec:sop-problem}).
-\item We introduce an idiom that overcomes the problem. The approach avoids both, the use of overlapping instances and changing a generic representation. (Section~\ref{sec:handling-recursion})
+\item We introduce an idiom that overcomes the problem. The approach avoids both, the use of overlapping instances and changing a generic representation (Section~\ref{sec:handling-recursion}).
 % -- 
 %\item We provide a convenient interface for generic functions: there is no need to manually declare type class instances for using them.
 % -- this doesn't sound like a contribution
 \item We evaluate our approach through the development of a larger-scale use case---the generic zipper. The zipper is meant to be easily and flexibly used with families of mutually recursive datatypes (Section~\ref{sec:generic-zipper}).
-\item We note, that our approach can contribute to the \textsf{generics-sop}'s one eliminating some boilerplate instance declarations, which necessarily  arise in practice as a consequence of absence of information about recursion points. An example of that, taken from the \textsf{basic-sop}~\cite{basic-sop} package, is discussed in Section~\ref{sec:gshow}.
+\item We note, that our approach can contribute to the \textsf{generics-sop}'s one eliminating some boilerplate instance declarations, which necessarily  arise in practice as a consequence of absence of information about recursion points. An example of that, taken from the \textsf{basic-sop}~\cite{basic-sop} package, is discussed in Section~\ref{subsec:gshow}.
 \end{itemize}
 
 We believe that our idea is suitable for any sum-of-products approach that do not exploit the fixed point view and thus subject to the problem. We choose the \textsf{generics-sop} approach as a case study because it appears to be a widely applicable library and builds on powerful language extensions implemented in GHC.
@@ -201,7 +202,7 @@ We illustrate the problem through a short example. The \textsf{QuickCheck} libra
 \texttt{
 \vs
 \indent subterms \ann Generic a \Ra a \ra [a]\\
-\indent subterms t = subtermsNS (unSOP \$ from t)
+\indent subterms t = subtermsNS \$ unSOP \$ from t
 \vs
 \indent subtermsNS \ann NS (NP I) xss \ra [a]\\
 \indent subtermsNS (S ns) = subtermsNS ns\\
@@ -302,10 +303,10 @@ As a side note, we make use of \textsf{ScopedTypeVariables} extension in the def
 
 To complete the solution of the problem, the \texttt{ProofEq} constraint must be added to the \texttt{subterms} and \texttt{subtermsNS} declarations as well.
 
-In summary, we claim that any generic function accessing recursive knots in the underlying datatype structure can be defined in the way described above for \texttt{subterms} task. We give another example showing how to adapt our idiom to different scenarios in the following subsection.
+In summary, we claim that any generic function accessing recursive knots in the underlying datatype structure can be defined in the way described above for \texttt{subterms}' task. We give another example showing how to adapt our idiom to different scenarios in the following subsection.
 
 \subsection{Generic show}
-\label{sec:gshow}
+\label{subsec:gshow}
 
 The function \texttt{show} is a common example of useful functions that traverse a datatype's recursive structure. It is known that this function can be defined in a generic way for an arbitrary datatype. De Vries and L\"{o}h define generic function \texttt{gshow} in the \textsf{basic-sop} package~\cite{basic-sop} based on the SOP view. We follow their implementation of \texttt{gshow} for the most part, but improve it in respect of handling recursion. The original \texttt{gshow} yields to the standard \texttt{show} generated through \texttt{\textbf{deriving} Show}, because it does not consult with recursion points to place parentheses. We eliminate this drawback.
 
@@ -361,6 +362,50 @@ Here is a benefit of our implementation: it can be used directly, without any ad
 }
 This is a consequence of \texttt{gshow} from \textsf{basic-sop} not treating recursive positions separately, and therefore requiring the \texttt{Show} constraint for all knots in the datatype structure.
 
+\section{Polymorphic recursion}
+\label{sec:polymorphic-recursion}
+
+The solution, described in the previous section, is applicable to a range of datatypes that are \emph{monomorphically recursive}. Any of those datatypes has the same type parameters in the left-hand side of its definition and at its recursion points (e.g. \texttt{Tree~a} from Section~\ref{sec:sop-view}). We can go further and proceed with a solution for generic functions, which covers some datatypes whose type parameters in each recursive knot may differ from those in its parent. It turns out, as we will show below, that the solution allows for datatypes with a ``simple'' form of \emph{polymorphic recursion}, but fails to work for nested datatypes.
+
+Assume we have a polymorphically recursive datatype \texttt{PolyRec~a} defined in terms of a type family \texttt{Poly}:
+\texttt{
+\vs
+\indent data PolyRec a = Tail a | Rec a (PolyRec (Poly a))
+\vs
+\indent type family Poly a where\\
+\indent \ind  Poly Bool = Char\\
+\indent \ind  Poly Char = Bool\\
+\indent \ind  Poly a\ind = a
+\vspace{0.2cm}
+}
+
+For managing polymorphic recursion in this datatype, we can write an analogue of the \texttt{Equal} type family from Section~\ref{sec:handling-recursion}, which ignores type parameters when checking two polymorphic types. Since any datatype with type parameters \texttt{f a b c \ds} has kind \texttt{* \ra (* \ra (* \ra \ds))}, a \texttt{PolyEq} type family can be defined thus:
+\texttt{
+\vs
+\indent type family PolyEq (a \ann k) (x \ann k) \ann Bool where\\
+\indent \ind  PolyEq (f a) (g b) = PolyEq f g\\
+\indent \ind  PolyEq a\ind\s a\ind\s = 'True\\
+\indent \ind  PolyEq a\ind\s x\ind\s = 'False
+\vspace{0.2cm}
+}
+
+The function \texttt{gshow} from Section~\ref{subsec:gshow} can be reimplemented by using this type family instead of \texttt{Equal}. The only piece of its definition must be changed as well in order to recursively invoke the function each time with a new type:
+\texttt{
+\vs
+\indent instance Show \s b \Ra CaseShow 'False a b where\\
+\indent \ind    caseShow' \s\s = show\\
+\indent instance GShow b \Ra CaseShow 'True \s a b where\\
+\indent \ind    caseShow' t = "(" ++ gshow t ++ ")"
+\vspace{0.2cm}
+}
+
+Unfortunately, this approach, albeit working well for datatypes defined like \texttt{PolyRec~a}, becomes unsuitable for nested datatypes, such as one below:
+\texttt{
+\vs
+\indent data Nested a = Epsilon | Nest a (Nested [a])
+\vs
+}
+The culprit is the constraint \texttt{All2 (CaseRecShow a) (Code a)} that now turns out to be a root of nonterminating computation of the constraint, because of the \texttt{GShow b} instance context above.
 
 \section{The generic zipper}
 \label{sec:generic-zipper}
@@ -491,7 +536,7 @@ The type parameters \texttt{r}, \texttt{fam}, and \texttt{c} in \texttt{Loc} cor
 
 \subsubsection{Focus}
 
-The subtree in a focus is wrapped by the \texttt{Focus} datatype. 
+The subtree in focus is wrapped by the \texttt{Focus} datatype. 
 The wrapper incapsulates the proofs about a number of important properties of a focus.
 \texttt{
 \vs
@@ -640,7 +685,7 @@ The following completes the computation of the context type:
 }
 The type family \texttt{ToContext} derives the type of the context of a datatype performing differentiation of a sum on its code. Since each product from the code matches a sum of multiple products in the context, it is helpful for each product of the context representation, to keep the index of its matching constructor of the datatype. We store the index in the datatype \texttt{ConsN} adding that to the head of each product but wrapped by \texttt{Proxy} because we use \texttt{ConsN} promoted to a kind in the type family, while the products contain types of kind \texttt{*}. The constructors \texttt{F} and \texttt{N} denote ``first'' and ``next'', respectively, and the special constructor \texttt{None} will be used further to indicate failure of matching indices.
 
-Finally, a context frame has two representations: as a type synonym and as a newtype wrapper
+Finally, a context frame has two representations: as a type synonym and as a newtype wrapper:
 \texttt{
 \vs
 \indent type CtxCode  fam a = ToContext 'F fam (Code a)
@@ -825,10 +870,10 @@ Arguably, it is still easier to treat recursion when ``explicit'' encoding is us
 \section*{Acknowledgments}
 \label{sec:acks}
 
-We are grateful to Julia Belyakova who helped to proof-read certain parts of the paper, 
+We are grateful to Julia Belyakova, who helped to proof-read certain parts of the paper, 
 and to the participants of the Seminar on Programming Languages and Compilers at 
-I.I.~Vorovich Institute of Mathematics, Mechanics and Computer Science (Southern Federal
-University, Russia) where we presented partial results of the work and got valuable feedback.
+I.I.~Vorovich Institute of Mathematics, Mechanics, and Computer Science (Southern Federal
+University, Russia), where we presented partial results of the work and got valuable feedback.
 
 This project has received funding from the European Research Council (ERC) under the
 European Union's Horizon 2020 research and innovation programme (grant agreement No 695412).
