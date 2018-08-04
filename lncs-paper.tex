@@ -111,7 +111,11 @@ The overlap problem also strikes in the security setting when code is compiled a
 %Kiselyov et al.~\cite{Kiselyov2004} show how to localize overlap for access operations in a systematic way. Using \textit{closed type families}~\cite{Eisenberg2014}, we introduce an idiom that allows us to completely eliminate overlap for handling recursion.
 % -- this should go to Realted Work (if stays in the paper at all)
 
-We feel both existing approaches unsatisfactory and make the following contributions.
+The problem of using overlapping instances was first addressed by Kiselyov~et~al.~\cite{Kiselyov2004}. Their technique for avoiding overlap relies on a Haskell 98 extension for functional dependencies. The solution proposes two variants of defining a type-level equality predicate, a type class, and then systematically localizes overlap by circumventing it with that predicate. The first version of type equality maps types to unique type representations and compares them. Its later implementation with type families~\cite{Kiselyov2012} fully eliminates \textsf{OverlappingInstances}. Although, each type needs a representation instance to be derived---by means of Template Haskell or GHC. The most generic solution for type equality, the second version, again makes use of overlapping instances, however.
+
+Closed type families, today's Haskell extension, has been proposed primarily to obviate the need for overlapping instances. But it does not seem to be well-known that they have useful application in the generic programming area.
+
+We follow up the overlap-avoiding idea from the existing approach and make the following contributions.
 \begin{itemize}
 \item We describe the problem with the current approach of SOP in detail (Section~\ref{sec:sop-problem}).
 \item We introduce an idiom that overcomes the problem. The approach avoids both, the use of overlapping instances and changing a generic representation (Section~\ref{sec:handling-recursion}).
@@ -144,7 +148,7 @@ data Tree a = Leaf a | Node (Tree a) (Tree a)
 \end{lstlisting}
 This datatype is isomorphic to the following code:
 \begin{lstlisting}
-type family Code (Tree a) = '[ '[a], '[Tree a, Tree a]]
+type instance Code (Tree a) = '[ '[a], '[Tree a, Tree a]]
 \end{lstlisting}
 
 \begin{figure}[t]
@@ -197,14 +201,18 @@ class All SListI (Code a) => Generic (a :: *) where
 \end{lstlisting}
 The sum of products type, \K{SOP f}, is a newtype-wrapper for \K{NS (NP f)}, and the structural representation \K{Rep} of a datatype \K{a} is a type synonym for a \K{SOP I} of \K{a}'s code. The functions, \K{from} and \K{to}, perform a shallow conversion of the datatype topmost layer---they do not recursively translate the constructor arguments.
 
-We leave out discussion of the \K{SListI} constraint in the \K{Generic} class definition as irrelevant to our work. Although, we do use \K{All} constraint combinator (as in \K{All SListI}) in the following. Therefore, it is worth noting that \K{All} applies a particular constraint (e.g. \K{SListI} above) to each member of a list of types. The usage of constraints as type arguments is allowed due to \textsf{ConstraintKinds} language extension introducing a dedicated kind \K{Constraint}.
+We leave out discussion of the \K{SListI} constraint in the \K{Generic} class definition as irrelevant to our work. Although, we do use \K{All} constraint combinator (as in \K{All SListI}) in the following. Therefore, it is worth noting that \K{All} applies a particular constraint (e.g. \K{SListI} above) to each member of a list of types. The usage of constraints as type arguments is allowed due to the \textsf{ConstraintKinds} language extension introducing a dedicated kind \K{Constraint}.
 
 We have introduced generic representation employed by the SOP library and are ready to describe the problem of handling recursion points, stemming from the representation. 
 
 \subsection{Problem with handling recursion}
 \label{sec:recursion-problem}
 
-We illustrate the problem through a short example. The \textsf{QuickCheck} library~\cite{Claessen2011} for automatic testing of Haskell code defines a helper function \K{subterms} that takes a term and obtains a list of all its immediate subterms that are of the same type as the given term, that is, all the recursive positions in the term structure. We reimplement this function using the SOP view:
+We illustrate the problem through a short example. The \textsf{QuickCheck} library~\cite{Claessen2011} for automatic testing of Haskell code defines a helper function \K{subterms} that takes a term and obtains a list of all its immediate subterms that are of the same type as the given term, that is, all the recursive positions in the term structure. In the following, we reimplement this function using the SOP view. But first we give a sketch of solution to introduce the idea.
+
+\subsubsection{Non-implementation}
+
+The SOP-based \K{subterms} definition is outlined below:
 \begin{lstlisting}
 subterms :: Generic a => a -> [a]
 subterms t = subtermsNS $ unSOP $ from t
@@ -215,13 +223,15 @@ subtermsNS (Z np) = subtermsNP np
 
 subtermsNP :: ∀a xs. NP I xs -> [a]
 subtermsNP p (I y :* ys)
-  | typeEq @a y = witnessEq y : subtermsNP ys
+  | typeOf @a y = castEq y : subtermsNP ys
   | otherwise   = subtermsNP ys
 subtermsNP _ Nil = []
 \end{lstlisting}
 The function \K{subterms} translates the term to its representation, unwrapping the sum of products from \K{SOP}, and passes that to the auxiliary function \K{subtermsNS}. The latter merely traverses the sum and, once reaches the product,  passes it further to \K{subtermsNP}.
 
 The algorithm of \K{subtermsNP} is straightforward---it traverses the product, appending current element to the result list if its type is the same as of the term \K{t}, otherwise skipping the element. We use GHC's \textsf{TypeAppications} extension to pass that type.
+
+\subsubsection{Overlap-based implementation}
 
 Now, we need a way to check type equality and, in the case of equal types, to witness that the element is of the desired type. There is no clear path to this at the moment. Therefore, we step back (until Section~\ref{subsec:solve-subtermnp}) and, to implement \K{subtermNP}, follow the \textsf{QuickCheck}'s example\footnote{The \textsf{QuickCheck} library applies another approach to generic programming, namely \textsf{GHC.Generics}.}, using overlapping instances of a dedicated class instead.
 \begin{lstlisting}
@@ -258,40 +268,46 @@ Closed type families are the Haskell language extension introduced by Eisenberg 
 \begin{lstlisting}
 type family Equal a x :: Bool where
   Equal a a = 'True
-  Equal a x = 'False
+  Equal _ _ = 'False
 \end{lstlisting}
 The equations in a closed type family are matched in a top-to-bottom order. Since the order is fixed, the overlapping equations here cannot be used to define unsound type-level equations.
 
 \subsection{Solution to \K{subtermsNP} revised}
 \label{subsec:solve-subtermnp}
 
-We now return to our running example from Section~\ref{sec:recursion-problem}. With the type equality, we can witness the coercion between equal types by defining a type class:
+We now return to our running example from Section~\ref{sec:recursion-problem}. With the type equality predicate, we can decide if \K{a == b} by defining a type class:
 \begin{lstlisting}
-class Proof (eq :: Bool) (a :: *) (b :: *) where
-  witnessEq :: b -> Maybe a
+class DecideEq (eq :: Bool) (a :: *) (b :: *) where
+  decideEq :: Maybe (b :==: a)
 
-instance Proof 'False a b where
-  witnessEq _ = Nothing
-instance Proof 'True  a a where
-  witnessEq   = Just
+instance a == b => DecideEq True  a b where
+  decideEq = Just Refl
+instance          DecideEq False a b where
+  decideEq = Nothing
 \end{lstlisting}
+If the types \K{a} and \K{b} are the same, the \K{:==:} type from \K{Data.Type.Equality} witnesses the equality.
 
-For every element in a list of all direct subterms of a term we shall provide a proof object witnessing its type (in)equality to the type of the term. This can be done by means of the \K{All} combinator and partially applied auxiliary type class \K{ProofEq}, which abbreviates the heavy-weighted interface of \K{Proof}:
+For every element in a list of all direct subterms of a term we shall provide a proof object witnessing its type (in)equality to the type of the term. This can be done by means of the \K{All} combinator and partially applied auxiliary type class \K{ProofEq}, which abbreviates the heavy-weighted interface of \K{DecideEq}:
 \begin{lstlisting}
-class    Proof (Equal a b) a b => ProofEq a b
-instance Proof (Equal a b) a b => ProofEq a b
+class    DecideEq (Equal a b) a b => ProofEq a b
+instance DecideEq (Equal a b) a b => ProofEq a b
+\end{lstlisting}
+The equality proof can then be employed to provide a type-safe cast between two equal types:
+\begin{lstlisting}
+castEq :: ∀a b. ProofEq a b => b -> Maybe a
+castEq t = (\d -> castWith d t) <$> decideEq @(Equal a b)
 \end{lstlisting}
 Resulting implementation of \K{subtermsNP} resembles our first definition given in the previous section:
 \begin{lstlisting}
 subtermsNP :: ∀a xs. All (ProofEq a) xs => NP I xs -> [a]
 subtermsNP (I (y :: x) :* ys)
-  = case witnessEq @(Equal a x) y of
+  = case castEq y of
       Just t  -> t : subtermsNP ys
       Nothing -> subtermsNP  ys
 subtermsNP _ Nil = []
 \end{lstlisting}
 
-As a side note, we make use of \textsf{ScopedTypeVariables} extension in the definition above, as the type of the element being matched does not appear in the function signature, since it may match an empty list. 
+As a side note, we make use of the \textsf{ScopedTypeVariables} extension in the definition above, as the type of the element being matched does not appear in the function signature, since it may match an empty list. 
 
 To complete the solution of the problem, the \K{ProofEq} constraint must be added to the \K{subterms} and \K{subtermsNS} declarations as well.
 
@@ -364,18 +380,18 @@ For managing polymorphic recursion in this datatype, we can write an analogue of
 type family PolyEq (a :: k) (x :: k) :: Bool where
   PolyEq (f a) (g b) = PolyEq f g
   PolyEq a     a     = 'True
-  PolyEq a     x     = 'False
+  PolyEq _     _     = 'False
 \end{lstlisting}
 
-The function \K{gshow} from Section~\ref{subsec:gshow} can be reimplemented by using this type family instead of \K{Equal}. The only piece of its definition must be changed as well in order to recursively invoke the function each time with a new type:
+The function \K{gshow} from Section~\ref{subsec:gshow} can be reimplemented by using this type family instead of \K{Equal}. The only piece of its definition must be changed as well in order to recursively invoke the function each time with a new type (with the proper change in the \K{CaseRecShow} definition):
 \begin{lstlisting}
-instance Show  b => CaseShow 'False a b where
+instance Show  a => CaseShow 'False a where
   caseShow'   = show
-instance GShow b => CaseShow 'True  a b where
+instance GShow a => CaseShow 'True  a where
   caseShow' t = "(" ++ gshow t ++ ")"
 \end{lstlisting}
 
-Unfortunately, this approach, albeit working well for datatypes defined like \K{PolyRec~a}, becomes unsuitable for nested datatypes, such as one below:
+Unfortunately, this approach, albeit working well for datatypes defined like \K{PolyRec a}, becomes unsuitable for nested datatypes, such as one below:
 \begin{lstlisting}
 data Nested a = Epsilon | Nest a (Nested [a])
 \end{lstlisting}
@@ -386,7 +402,7 @@ The culprit is the constraint \K{All2 (CaseRecShow a) (Code a)} that now turns o
 
 The zipper is a data structure that enables efficient navigation and editing within the tree-like structure of a datatype. It represents a current location in that structure, storing a tree node, a \emph{focus}, along with its context. Having a zipper focused on a recursive knot in a structure, we may produce a new location by moving the focus up, down, left, or right. On the way, we can update the nodes. Entering and leaving the navigation usually need a special care.
 
-The classical zipper described by Huet~\cite{Huet1997} can be generically calculated for regular datatypes~\cite{HiJeLo2004}---a subset of datatypes that can be viewed as a least fixed point of some polynomial expression on types. Yakushev~et~al.~\cite{MuRec2009} generalize the definition of the generic zipper for an arbitrary family of mutually recursive datatypes. All mentioned solutions require a datatype to be expressed using forms of a fixed-point operator, since the zipper operates on recursion points. 
+The classical zipper described by Huet~\cite{Huet1997} can be generically calculated for regular datatypes~\cite{HiJeLo2004}---all datatypes expressible as polynomial expressions on types. Yakushev~et~al.~\cite{MuRec2009} generalize the definition of the generic zipper for an arbitrary family of mutually recursive datatypes. All mentioned solutions require a datatype to be expressed using forms of a fixed-point operator, since the zipper operates on recursion points. 
 
 In this section, we describe our approach allowing one to define the generic zipper out of a representation that does not exploit a fixed point. We start with the generic zipper interface and an example of how it can be used (Section~\ref{ss:zip-interface}). Then, we turn to the type-level machinery employed to define locations inside mutually recursive datatypes using the SOP view  (Section~\ref{ss:locs}). Finally, we discuss the implementation of the generic zipper interface~--- the functions for manipulating locations (Section~\ref{ss:zip-impl}).
 
@@ -523,7 +539,7 @@ type In a fam = InFam a fam == 'True
 \end{lstlisting}
 The definition of \K{InFam} is omitted as a boring one.
 
-One last missing piece for managing focuses is the class \K{ProofIn}. It provides a proof of membership of a focus type to a family. Again, this generalizes the proof of type equality from Section~\ref{sec:handling-recursion}. The definitions of \K{ProofIn} and an auxiliary class \K{ProofFocus} are given in Figure~\ref{fig:proof-in}. 
+One last missing piece for managing focuses is the class \K{ProofIn}. It provides a proof of membership of a focus type to a family. Again, this generalizes the proof of type equality from Section~\ref{sec:handling-recursion}. The definitions of \K{ProofIn} and an auxiliary class \K{ProofFocus} are given in Figure~\ref{fig:proof-in}. In the setting of families, where there are no analogues of \K{:==:}, we can define only a weak form of proof, which is more flexible.
 %The constraints on the second \K{ProofFam} instance, which repeat the same ones from the \K{Family} constructor, constitute the proof.
 % this is not clear and, I think, can be omitted
 
@@ -587,7 +603,7 @@ infixr 6 .++
 
 type family (.*) (x :: *) (ys :: [[*]]) :: [[*]] where
   x .* (ys ': yss) = (x ': ys) ': (x .* yss)
-  x .* '[]         = '[]
+  _ .* '[]         = '[]
 infixr 7 .*
 
 (/\vspace{-0.3cm}/)
@@ -618,7 +634,7 @@ data Hole = Hole
 data End
 
 type family DiffProd (fam :: [*]) (xs :: [*]) :: [[*]] where
-  DiffProd fam '[]       = '[]
+  DiffProd _   '[]       = '[]
   DiffProd fam '[x]      = If (InFam x fam) '[ '[Hole]] '[]
   DiffProd fam '[End, x] = If (InFam x fam) '[ '[]]     '[]
   DiffProd fam (x ': xs)
@@ -637,7 +653,7 @@ data ConsN = F | N ConsN | None
 
 type family ToContext (n :: ConsN) (fam :: [*])
                       (code :: [[*]]) :: [[*]] where
-  ToContext n fam '[] = '[]
+  ToContext _ _ '[] = '[]
   ToContext n fam (xs ': xss)
     = Proxy n .* DiffProd fam xs .++ ToContext ('N n) fam xss
 \end{lstlisting}
@@ -722,9 +738,9 @@ Note that the first type parameter in the \K{FromFstRec} class is the index type
 Once we have constructed the product, we have to build the sum representing the choice of that product. If we have the index of the chosen constructor for the datatype, the one that we find for its context can be computed as follows:
 \begin{lstlisting}
 type family CtxConsN (xss :: [[*]]) (n :: ConsN) :: ConsN where
-  CtxConsN '[]                       n = 'None
-  CtxConsN ((Proxy n  ': xs) ': xss) n = 'F
-  CtxConsN ((Proxy n' ': xs) ': xss) n = 'N (CtxConsN xss n)
+  CtxConsN '[]                      _ = 'None
+  CtxConsN ((Proxy n  ': _) ': _  ) n = 'F
+  CtxConsN ((Proxy n' ': _) ': xss) n = 'N (CtxConsN xss n)
 \end{lstlisting}
 The list \K{xss} here is expected to be the context code, which this traverses until the first product storing the constructor index equal to the given one, i.~e., the context's first constructor matching with the chosen constructor of the datatype.
 
@@ -736,10 +752,14 @@ newtype Inj f xs a = Inj {apInj :: f a -> K (NS f xs) a}
 \end{lstlisting}
 For \K{f} instantiated to \K{NP I} and \K{xs} to be the sum of products reflecting a representation code, \K{injections} creates a product of all constructor choices that inject appropriate constructor arguments into each sum. We can use injections to choose the one that matches the obtained index.
 
-We now can witness the choice using the proof of type equality we have defined in Section~\ref{sec:handling-recursion}. In the following definition, \K{f} is supposed to be instantiated to \K{Inj (NP I) xss} where \K{xss} reflects the code of the context\footnote{This might be simplified by using a singleton type for \K{ConsN} instead of defining a type class function. However, when using a singleton, the recursive definition of \K{toFirstCtx} we give further requires a constraint on its function signature that leads to a nonterminating computation.}:
+We can witness the choice using a variant of the type-safe cast we have defined in Section~\ref{sec:handling-recursion}, which takes the result of the equality predicate:
 \begin{lstlisting}
-class    Proof (Equal a b) (f a) (f b) => ProofF f a b
-instance Proof (Equal a b) (f a) (f b) => ProofF f a b
+typeCastEq :: ∀eq a b. DecideEq eq a b => b -> Maybe a
+\end{lstlisting}
+In the following definition, \K{f} is supposed to be instantiated to \K{Inj (NP I) xss} where \K{xss} reflects the code of the context\footnote{This might be simplified by using a singleton type for \K{ConsN} instead of defining a type class function. However, when using a singleton, the recursive definition of \K{toFirstCtx} we give further requires a constraint on its function signature that leads to a nonterminating computation.}:
+\begin{lstlisting}
+class    DecideEq (Equal a b) (f a) (f b) => ProofF f a b
+instance DecideEq (Equal a b) (f a) (f b) => ProofF f a b
 
 class ConsNInj (n :: ConsN) (ys :: [*]) where
   consNInj :: All (ProofF f ys) xss => NP f xss -> f ys
@@ -749,10 +769,10 @@ instance ConsNInj n xs => ConsNInj ('N n) xs where
   consNInj Nil        = impossible
 instance ConsNInj 'F xs where
   consNInj ((xs :: f xs) :* _)
-    = fromMaybe impossible $ witnessEq @(Equal xs ys) xs
+    = fromMaybe impossible $ typeCastEq @(Equal xs ys) xs
   consNInj Nil = impossible
 instance ConsNInj 'None xs where
-  consNInj _   = impossible
+  consNInj _ = impossible
 
 impossible :: a
 impossible = error "impossible"
@@ -799,7 +819,7 @@ The idea similar to SOP has been proposed by Kiselyov~et~al.~\cite{Kiselyov2004}
 
 Morris and Jones~\cite{Morris2010} introduce the type-class system \textsf{ilab}, based on the Haskell 98 class system, with a new feature called ``instance chains''. This enables one to control overlap by using an explicit syntax in instance declarations. The approach resembles if-else chains. But the use of instance chains and local use of overlap leave code error-prone as a consequence of type class openness. Closed type families~\cite{Eisenberg2014} were recently introduced in Haskell to solve the overlap problem.
 
-Several works show how to define the Zipper~\cite{Huet1997} generically for regular~\cite{HiJeLo2004,McBride2001} and mutually recursive~\cite{MuRec2009} types using fixed-point generic views. Adams~\cite{Adams2010} defines a generic zipper for heterogeneous types.
+Several works show how to define the Zipper~\cite{Huet1997} generically for regular~\cite{HiJeLo2004,McBride2001} and mutually recursive~\cite{MuRec2009} types using fixed-point generic views. Adams~\cite{Adams2010} defines a generic zipper for heterogeneous types: a different kind of zipper that can traverse knots of various types, so it does not use the recursive structure.
 
 
 

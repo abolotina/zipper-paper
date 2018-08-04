@@ -58,6 +58,10 @@ Jansson, P., Jeuring, J.: Polyp---a polytypic programming language extension.
   Programming Languages. pp. 470--482. POPL '97, ACM, New York, NY, USA (1997).
   \doi{10.1145/263699.263763}
 
+\bibitem{Kiselyov2012}
+Kiselyov, O.: Type equalities, disequalities and obsoleting of overlapping
+  instances (2012), \url{http://okmij.org/ftp/Haskell/typeEQ.html}
+
 \bibitem{Kiselyov2004}
 Kiselyov, O., L\"{a}mmel, R., Schupke, K.: Strongly typed heterogeneous
   collections. In: Proceedings of the 2004 ACM SIGPLAN Workshop on Haskell. pp.
