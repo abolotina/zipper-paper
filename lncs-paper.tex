@@ -21,6 +21,10 @@ escapeinside={(/}{/)},
 literate={::}{{\ann}}2 {=>}{{\Ra}}2 {->}{{\ra}}2
 {∀}{{\fa}}1 {==}{{\tteq}}1 {...}{{\ds}}2
 {>>>}{{\comp}}2 {>=>}{{\kleisli}}2
+{_1}{{$_\mathtt{1}$}}1 {_2}{{$_\mathtt{2}$}}1
+{_n}{{$_\mathtt{n}$}}1 {_k}{{$_\mathtt{k}$}}1
+{_Aux}{{\large$_\mathtt{\hs Aux}$}}2
+{__Aux}{{\large$_\mathtt{Aux}$}}2
 }
 
 \urlstyle{same}
@@ -31,6 +35,7 @@ literate={::}{{\ann}}2 {=>}{{\Ra}}2 {->}{{\ra}}2
 % to display URLs in blue roman font according to Springer's eBook style:
 %\renewcommand\UrlFont{\color{blue}\rmfamily}
 
+\newcommand{\hs}{\hspace{0.1cm}}
 \newcommand{\nhs}{\hspace{-0.06cm}}
 
 \newcommand{\Ra}{$\Rightarrow$}
@@ -111,7 +116,7 @@ The overlap problem also strikes in the security setting when code is compiled a
 %Kiselyov et al.~\cite{Kiselyov2004} show how to localize overlap for access operations in a systematic way. Using \textit{closed type families}~\cite{Eisenberg2014}, we introduce an idiom that allows us to completely eliminate overlap for handling recursion.
 % -- this should go to Realted Work (if stays in the paper at all)
 
-The problem of using overlapping instances was first addressed by Kiselyov~et~al.~\cite{Kiselyov2004}. Their technique for avoiding overlap relies on a Haskell 98 extension for functional dependencies. The solution proposes two variants of defining a type-level equality predicate, a type class, and then systematically localizes overlap by circumventing it with that predicate. The first version of type equality maps types to unique type representations and compares them. Its later implementation with type families~\cite{Kiselyov2012} fully eliminates \textsf{OverlappingInstances}. Although, each type needs a representation instance to be derived---by means of Template Haskell or GHC. The most generic solution for type equality, the second version, again makes use of overlapping instances, however.
+The problem of using overlapping instances was first addressed by Kiselyov~et~al.~\cite{Kiselyov2004}. Their technique for avoiding overlap relies on a Haskell 98 extension for functional dependencies. The solution proposes two variants of defining a type-level equality predicate, a type class, and then systematically localizes overlap by circumventing it with that predicate. The first version of type equality maps types to unique type representations and compares them. That variant and its later implementation with type families~\cite{Kiselyov2012} fully eliminate \textsf{OverlappingInstances}. Although, each type needs a representation instance to be derived---by means of Template Haskell or GHC. The most generic solution for type equality, the second version, again makes use of overlapping instances, however.
 
 Closed type families, today's Haskell extension, has been proposed primarily to obviate the need for overlapping instances. But it does not seem to be well-known that they have useful application in the generic programming area.
 
@@ -206,16 +211,18 @@ We leave out discussion of the \K{SListI} constraint in the \K{Generic} class de
 We have introduced generic representation employed by the SOP library and are ready to describe the problem of handling recursion points, stemming from the representation. 
 
 \subsection{Problem with handling recursion}
-\label{sec:recursion-problem}
+\label{subsec:recursion-problem}
 
 We illustrate the problem through a short example. The \textsf{QuickCheck} library~\cite{Claessen2011} for automatic testing of Haskell code defines a helper function \K{subterms} that takes a term and obtains a list of all its immediate subterms that are of the same type as the given term, that is, all the recursive positions in the term structure. In the following, we reimplement this function using the SOP view. But first we give a sketch of solution to introduce the idea.
 
 \subsubsection{Non-implementation}
 
+We describe a straghtforward implementation based on plain pattern matching, for reasons of simplicity. However, in Section~\ref{subsec:solve-subterms}, we show a better high-level solution using one of the primary advantages of \textsf{generics-sop}---high-level traversal functions.
+
 The SOP-based \K{subterms} definition is outlined below:
 \begin{lstlisting}
 subterms :: Generic a => a -> [a]
-subterms t = subtermsNS $ unSOP $ from t
+subterms = subtermsNS . unSOP . from
 
 subtermsNS :: NS (NP I) xss -> [a]
 subtermsNS (S ns) = subtermsNS ns
@@ -233,7 +240,7 @@ The algorithm of \K{subtermsNP} is straightforward---it traverses the product, a
 
 \subsubsection{Overlap-based implementation}
 
-Now, we need a way to check type equality and, in the case of equal types, to witness that the element is of the desired type. There is no clear path to this at the moment. Therefore, we step back (until Section~\ref{subsec:solve-subtermnp}) and, to implement \K{subtermNP}, follow the \textsf{QuickCheck}'s example\footnote{The \textsf{QuickCheck} library applies another approach to generic programming, namely \textsf{GHC.Generics}.}, using overlapping instances of a dedicated class instead.
+Now, we need a way to check type equality and, in the case of equal types, to witness that the element is of the desired type. There is no clear path to this at the moment. Therefore, we step back (until Section~\ref{subsec:solve-subterms}) and, to implement \K{subtermNP}, follow the \textsf{QuickCheck}'s example\footnote{The \textsf{QuickCheck} library applies another approach to generic programming, namely \textsf{GHC.Generics}.}, using overlapping instances of a dedicated class instead.
 \begin{lstlisting}
 class Subterms a (xs :: [*]) where
   subtermsNP :: NP I xs -> [a]
@@ -272,10 +279,10 @@ type family Equal a x :: Bool where
 \end{lstlisting}
 The equations in a closed type family are matched in a top-to-bottom order. Since the order is fixed, the overlapping equations here cannot be used to define unsound type-level equations.
 
-\subsection{Solution to \K{subtermsNP} revised}
-\label{subsec:solve-subtermnp}
+\subsection{Solution to \K{subterms} revised}
+\label{subsec:solve-subterms}
 
-We now return to our running example from Section~\ref{sec:recursion-problem}. With the type equality predicate, we can decide if \K{a == b} by defining a type class:
+We now return to our running example from Section~\ref{subsec:recursion-problem}. With the type equality predicate, we can decide if \K{a == b} by defining a type class:
 \begin{lstlisting}
 class DecideEq (eq :: Bool) (a :: *) (b :: *) where
   decideEq :: Maybe (b :==: a)
@@ -287,7 +294,7 @@ instance          DecideEq False a b where
 \end{lstlisting}
 If the types \K{a} and \K{b} are the same, the \K{:==:} type from \K{Data.Type.Equality} witnesses the equality.
 
-For every element in a list of all direct subterms of a term we shall provide a proof object witnessing its type (in)equality to the type of the term. This can be done by means of the \K{All} combinator and partially applied auxiliary type class \K{ProofEq}, which abbreviates the heavy-weighted interface of \K{DecideEq}:
+For every element in a list of all direct subterms of a term we shall provide a proof object witnessing its type (in)equality to the type of the term. This can be done by means of the \K{All} combinator and partially applied dedicated type class \K{ProofEq}, which abbreviates the heavy-weighted interface of \K{DecideEq}:
 \begin{lstlisting}
 class    DecideEq (Equal a b) a b => ProofEq a b
 instance DecideEq (Equal a b) a b => ProofEq a b
@@ -297,26 +304,47 @@ The equality proof can then be employed to provide a type-safe cast between two 
 castEq :: ∀a b. ProofEq a b => b -> Maybe a
 castEq t = (\d -> castWith d t) <$> decideEq @(Equal a b)
 \end{lstlisting}
-Resulting implementation of \K{subtermsNP} resembles our first definition given in the previous section:
+
+Below we show two variants of completing the \K{subterms} implementation. The low-level version performs pattern matching on the structure of \K{NS} and \K{NP}, as we do in Section~\ref{subsec:recursion-problem}. For this variant, we reimplement \K{subtermsNP}. The different implementation employes powerful machinery of high-level combinators---one of the major advantages provided by \textsf{generics-sop}. Although, those high-level functions become one extra layer of complexity.
+
+\subsubsection{Low-level implementation}
+
+The low-level definition of \K{subtermsNP} using the type cast resembles its outline given in the previous section:
 \begin{lstlisting}
 subtermsNP :: ∀a xs. All (ProofEq a) xs => NP I xs -> [a]
-subtermsNP (I (y :: x) :* ys)
-  = case castEq y of
-      Just t  -> t : subtermsNP ys
-      Nothing -> subtermsNP  ys
+subtermsNP (I (y :: x) :* ys) =
+  case castEq y of
+    Just t  -> t : subtermsNP ys
+    Nothing -> subtermsNP  ys
 subtermsNP _ Nil = []
 \end{lstlisting}
 
 As a side note, we make use of the \textsf{ScopedTypeVariables} extension in the definition above, as the type of the element being matched does not appear in the function signature, since it may match an empty list. 
 
-To complete the solution of the problem, the \K{ProofEq} constraint must be added to the \K{subterms} and \K{subtermsNS} declarations as well.
+To finish up, the \K{ProofEq} constraint must be added to the \K{subterms} and \K{subtermsNS} declarations as well.
 
-In summary, we claim that any generic function accessing recursive knots in the underlying datatype structure can be defined in the way described above for \K{subterms}' task. We give another example showing how to adapt our idiom to different scenarios in the following subsection.
+\subsubsection{High-level implementation}
+
+By taking advantage of \textsf{generics-sop}'s powerful functions for collapsing and mapping, one can define the functions \K{subtermsNS} and \K{subtermsNP} as follows:
+\begin{lstlisting}
+subtermsNS :: ∀a xss. All (AllProofEq a) xss
+           => NS (NP I) xss -> [a]
+subtermsNS = collapse_NS
+           . cmap_NS (Proxy @(AllProofEq a)) subtermsNP
+
+subtermsNP :: ∀a xs. AllProofEq a xs => NP I xs -> K [a] xs
+subtermsNP = K . catMaybes
+               . collapse_NP
+               . cmap_NP (Proxy @(ProofEq a)) (mapIK $ castEq)
+\end{lstlisting}
+This implementation requires also defining \K{AllProofEq} and properly changing the \K{subterms} type annotation.
+
+In summary, we claim that any generic function accessing recursive knots in the underlying datatype structure can be defined in the way described above for the task of \K{subterms}. We give another example showing how to adapt our idiom to different scenarios in the following subsection.
 
 \subsection{Generic show}
 \label{subsec:gshow}
 
-The function \K{show} is a common example of useful functions that traverse a datatype's recursive structure. It is known that this function can be defined in a generic way for an arbitrary datatype. De Vries and L\"{o}h define generic function \K{gshow} in the \textsf{basic-sop} package~\cite{basic-sop} based on the SOP view. We follow their implementation of \K{gshow} for the most part, but improve it in respect of handling recursion. The original \K{gshow} yields to the standard \K{show} generated through \K{deriving Show}, because it does not consult with recursion points to place parentheses. We eliminate this drawback.
+The function \K{show} is a common example of useful functions that traverse a datatype's recursive structure. It is known that this function can be defined in a generic way for an arbitrary datatype. De Vries and L\"{o}h define generic function \K{gshow} in the \textsf{basic-sop} package~\cite{basic-sop} based on the SOP view. We follow their implementation of \K{gshow} for the most part, but improve it in respect of handling recursion. The example shows, how the better implementation, consulting with recursive positions, affects the usability of the function, obviating boilerplate code.
 
 The following exploits the idea of \emph{pattern matching}. As before, we consider two cases. In the first case, when the position we are matching on is not recursive, we only require it to be an  instance of \K{Show}, and invoke its \K{show} function. Whereas in the case of the recursive position, we surround it with parentheses and apply our generic function \K{gshow}. Thus, by means of the type family for equality, we model a form of pattern matching on the types again:
 \begin{lstlisting}
@@ -324,9 +352,9 @@ class CaseShow (eq :: Bool) (a :: *) (b :: *) where
   caseShow' :: b -> String
 
 instance Show  b => CaseShow 'False a b where
-  caseShow'   = show
+  caseShow' = show
 instance GShow a => CaseShow 'True  a a where
-  caseShow' t = "(" ++ gshow t ++ ")"
+  caseShow' = gshow
 \end{lstlisting}
 We provide a synonym for the \K{CaseShow (Equal a b) a b} instance, which we call \K{CaseRecShow}, as before with \K{ProofEq}; likewise a synonym for the matching function:
 \begin{lstlisting}
@@ -360,51 +388,46 @@ instance Show T where
 \end{lstlisting}
 This is a consequence of \K{gshow} from \textsf{basic-sop} not treating recursive positions separately, and therefore requiring the \K{Show} constraint for all knots in the datatype structure.
 
-\section{Polymorphic recursion}
-\label{sec:polymorphic-recursion}
 
-The solution, described in the previous section, is applicable to a range of datatypes that are \emph{monomorphically recursive}. Any of those datatypes has the same type parameters in the left-hand side of its definition and at its recursion points (e.g. \K{Tree a} from Section~\ref{sec:sop-view}). We can go further and proceed with a solution for generic functions, which covers some datatypes whose type parameters in each recursive knot may differ from those in its parent. It turns out, as we will show below, that the solution allows for datatypes with a ``simple'' form of \emph{polymorphic recursion}, but fails to work for nested datatypes.
+\subsection{Abstract description of the design pattern}
+\label{subsec:abstract-pattern}
 
-Assume we have a polymorphically recursive datatype \K{PolyRec a} defined in terms of a type family \K{Poly}:
+
+We can continue along the lines of the previous examples to consider the approach separately from concrete ones. One can use the technique abstractedly, following the pattern below:
+
 \begin{lstlisting}
-data PolyRec a = Tail a | Rec a (PolyRec (Poly a))
+class DispatchRec_Aux (p :: Bool)
+                    (a_1 :: k_1) ... (a_n :: k_n) (b :: *) where
+  dispatchRec_Aux :: b -> X
 
-type family Poly a where
-  Poly Bool = Char
-  Poly Char = Bool
-  Poly a    = a
+instance C_1 ... => DispatchRec_Aux 'False a_1 ... a_n b where
+  dispatchRec_Aux = f_1
+instance C_2 ... => DispatchRec_Aux 'True  a_1 ... a_n b where
+  dispatchRec_Aux = f_2
+
+class    DispatchRec_Aux (P a_1 ... a_k b) a_1 ... a_k ... a_n b
+  => DispatchRec a_1 ... a_n b
+instance DispatchRec_Aux (P a_1 ... a_k b) a_1 ... a_k ... a_n b
+  => DispatchRec a_1 ... a_n b
+
+dispatchRec :: ∀a_1 ... a_n b. DispatchRec a_1 ... a_n b => b -> X
+dispatchRec = dispatchRec_Aux @(P a_1 ... a_k b) @a_1 ... @a_k ... @a_n
 \end{lstlisting}
 
-For managing polymorphic recursion in this datatype, we can write an analogue of the \K{Equal} type family from Section~\ref{sec:handling-recursion}, which ignores type parameters when checking two polymorphic types. Since any datatype with type parameters \K{f a b c ...} has kind \K{* -> (* -> (* -> ...))}, a \K{PolyEq} type family can be defined thus:
-\begin{lstlisting}
-type family PolyEq (a :: k) (x :: k) :: Bool where
-  PolyEq (f a) (g b) = PolyEq f g
-  PolyEq a     a     = 'True
-  PolyEq _     _     = 'False
-\end{lstlisting}
+This machinery employes the abstract multi-place predicate \K{P} on types, supposed to be a closed typed family, to resolve the overlap of two dispatch branches, as captured by \K{DispatchRec__Aux}. The predicate \K{P} generalizes \K{Equal} to an arbitrary relation on types, so that one can model, e.g., subtyping for some domain-specific language. The introduction of the associated type class \K{DispatchRec} provides a handy interface for dispatch. The dispatch function \K{dispatchRec} decides on one of the functions \K{f_1} and \K{f_2}---depending on whether the predicate \K{P} is true for types \K{a_1}, \dots, \K{a_k}, \K{b}.
 
-The function \K{gshow} from Section~\ref{subsec:gshow} can be reimplemented by using this type family instead of \K{Equal}. The only piece of its definition must be changed as well in order to recursively invoke the function each time with a new type (with the proper change in the \K{CaseRecShow} definition):
-\begin{lstlisting}
-instance Show  a => CaseShow 'False a where
-  caseShow'   = show
-instance GShow a => CaseShow 'True  a where
-  caseShow' t = "(" ++ gshow t ++ ")"
-\end{lstlisting}
-
-Unfortunately, this approach, albeit working well for datatypes defined like \K{PolyRec a}, becomes unsuitable for nested datatypes, such as one below:
-\begin{lstlisting}
-data Nested a = Epsilon | Nest a (Nested [a])
-\end{lstlisting}
-The culprit is the constraint \K{All2 (CaseRecShow a) (Code a)} that now turns out to be a root of nonterminating computation of the constraint, because of the \K{GShow b} instance context above.
 
 \section{The generic zipper}
 \label{sec:generic-zipper}
+
 
 The zipper is a data structure that enables efficient navigation and editing within the tree-like structure of a datatype. It represents a current location in that structure, storing a tree node, a \emph{focus}, along with its context. Having a zipper focused on a recursive knot in a structure, we may produce a new location by moving the focus up, down, left, or right. On the way, we can update the nodes. Entering and leaving the navigation usually need a special care.
 
 The classical zipper described by Huet~\cite{Huet1997} can be generically calculated for regular datatypes~\cite{HiJeLo2004}---all datatypes expressible as polynomial expressions on types. Yakushev~et~al.~\cite{MuRec2009} generalize the definition of the generic zipper for an arbitrary family of mutually recursive datatypes. All mentioned solutions require a datatype to be expressed using forms of a fixed-point operator, since the zipper operates on recursion points. 
 
-In this section, we describe our approach allowing one to define the generic zipper out of a representation that does not exploit a fixed point. We start with the generic zipper interface and an example of how it can be used (Section~\ref{ss:zip-interface}). Then, we turn to the type-level machinery employed to define locations inside mutually recursive datatypes using the SOP view  (Section~\ref{ss:locs}). Finally, we discuss the implementation of the generic zipper interface~--- the functions for manipulating locations (Section~\ref{ss:zip-impl}).
+In this section, we describe our approach allowing one to define the generic zipper out of a representation that does not exploit a fixed point. We start with the generic zipper interface and an example of how it can be used (Section~\ref{ss:zip-interface}). Then, we turn to the type-level machinery employed to define locations inside mutually recursive datatypes using the SOP view  (Section~\ref{ss:locs}).
+
+In Technical Report, we discuss the implementation of the generic zipper interface---the functions for manipulating locations. The source code with the full implementation of the zipper is available at our \textsf{GitHub} repository\footnote{\url{https://github.com/Maryann13/Zipper}}.
 
 \subsection{Interface and usage}
 \label{ss:zip-interface}
@@ -498,7 +521,7 @@ Forest (RTree 'a' $ Forest (RTree 'b' Empty) Empty)
        (Forest (RTree 'c' Empty) Empty)
 \end{lstlisting}
 
-Our zipper applies to regular datatypes as well. In that case, \K{fam} list shall contain a single element. Generally, the interface is flexible enough to allow us to check in any collection of types we are interested in during traversal. However, we demand an updating operation to be a type class function to distinguish the types of the nodes.
+Our zipper applies to regular datatypes as well. In that case, \K{fam} list shall contain a single element. Generally, the interface is flexible enough to allow us to check in any collection of types we are interested in during traversal. However, we demand an updating operation to rely on a type class function to distinguish the types of the nodes.
 
 \subsection{Locations}
 \label{ss:locs}
@@ -509,7 +532,7 @@ data Loc (r :: *) (fam :: [*]) (c :: * -> Constraint) where
   Loc :: Focus r a fam c -> Contexts r a fam c
       -> Loc r fam c
 \end{lstlisting}
-The type parameters \K{r}, \K{fam}, and \K{c} in \K{Loc} correspond to the root type of the tree, the list of types of nodes to visit, and a constraint imposing restrictions on the types in the list, respectively. Also, the single constructor is existentially quantified over one more type variable, \K{a}, for we need to store a type of the focus' parent to be able to move up successively in a tree-like structure. We discuss both term parameters of the constructor of \K{Loc} in detail below. 
+The type parameters \K{r}, \K{fam}, and \K{c} in \K{Loc} correspond to the root type of the tree, the list of types of nodes to visit, and a constraint imposing restrictions on the types in the list, respectively. Also, the single constructor is existentially quantified over one more type variable, \K{a}, for we need to store a type of the focus' parent to be able to move up successively in a tree-like structure. We discuss both the term parameters of the constructor of \K{Loc} in detail below. 
 
 \subsubsection{Focus}
 
@@ -521,7 +544,7 @@ data Focus (r :: *) (a :: *) (fam :: [*])
  Focus :: (Generic b, In b fam, ZipperI r a b fam c)
        => b -> Focus r a fam c
 \end{lstlisting}
-Existential type variable \K{b} represents the type of a focus. We apply a number of predicates to \K{b}, hence we can implement the steps of the navigation not knowing the actual type of a focus. Firstly, the type of a focus should have the \K{Generic} representation. Secondly, it should live \K{In} the list of types we are going to visit. Lastly, it ought to satisfy the set of constraints for the whole zipper interface captured by the \K{ZipperI} predicate. In particular, the predicate ensures that \K{a} is the type of the parent for the focus in the structure under consideration.
+Existential type variable \K{b} represents the type of a focus. We apply a number of predicates to \K{b}, hence we can implement the steps of the navigation not knowing the actual type of a focus. Firstly, the type of a focus should have the \K{Generic} representation. Secondly, it should live \K{In} the list of types we are going to visit. Lastly, it ought to satisfy the set of constraints for the whole zipper interface captured by the \K{ZipperI} predicate. In particular, the predicate ensures that \K{a} is the type of the parent for the focus in the structure under consideration. Also, it guarantees that \K{b} fulfils the constraint \K{c}. Again, we make \K{c} embedded in \K{Loc} by reason of existentiality of \K{b}, which precludes the enforcement of this restriction by means of external \K{All}.
 
 We implement the \K{In} constraint by means of a type family \K{InFam} exactly along the lines of the \K{Equal} type family defined in the beginning of Section~\ref{sec:handling-recursion}. 
 %~ The following checks a type for membership of a type-level list that we use to express a family:
@@ -539,7 +562,7 @@ type In a fam = InFam a fam == 'True
 \end{lstlisting}
 The definition of \K{InFam} is omitted as a boring one.
 
-One last missing piece for managing focuses is the class \K{ProofIn}. It provides a proof of membership of a focus type to a family. Again, this generalizes the proof of type equality from Section~\ref{sec:handling-recursion}. The definitions of \K{ProofIn} and an auxiliary class \K{ProofFocus} are given in Figure~\ref{fig:proof-in}. In the setting of families, where there are no analogues of \K{:==:}, we can define only a weak form of proof, which is more flexible.
+One last missing piece for managing focuses is the class \K{ProofFocus}. It provides a proof of membership of a focus type to a family. Again, this generalizes (in a weak form) the proof of type equality from Section~\ref{subsec:solve-subterms}. The definitions of \K{ProofFocus} and an auxiliary class \K{ProofFocus__Aux} are given in Figure~\ref{fig:proof-in}. In the setting of families, where there are no analogues of \K{:==:}, we can define only a weak kind of proof, which is more flexible. We can then make it handy by defining a function \K{castFocus} using \K{castFocus__Aux}, as with \K{castEq} before.
 %The constraints on the second \K{ProofFam} instance, which repeat the same ones from the \K{Family} constructor, constitute the proof.
 % this is not clear and, I think, can be omitted
 
@@ -547,20 +570,20 @@ One last missing piece for managing focuses is the class \K{ProofIn}. It provide
 \begin{CenteredBox}
 {\lset
 \begin{lstlisting}
-class ProofFocus (inFam :: Bool) (r :: *) (a :: *) (b :: *)
-                 (fam :: [*]) (c :: * -> Constraint) where
-  witness :: b -> Maybe (Focus r a fam c)
+class ProofFocus_Aux (inFam :: Bool) (r :: *) (a :: *) (b :: *)
+                   (fam :: [*]) (c :: * -> Constraint) where
+  castFocus_Aux :: b -> Maybe (Focus r a fam c)
 
-instance ProofFocus 'False r a b fam c where
-  witness _ = Nothing
+instance ProofFocus_Aux 'False r a b fam c where
+  castFocus_Aux _ = Nothing
 instance (Generic b, In b fam, ZipperI r a b fam c)
-    => ProofFocus 'True r a b fam c where
-  witness   = Just . Focus
+      => ProofFocus_Aux 'True  r a b fam c where
+  castFocus_Aux   = Just . Focus
 
-class ProofFocus (InFam b fam) r a b fam c
-    => ProofIn r a b fam c
-instance ProofFocus (InFam b fam) r a b fam c
-    => ProofIn r a b fam c
+class    ProofFocus_Aux (InFam b fam) r a b fam c
+    => ProofFocus r a b fam c
+instance ProofFocus_Aux (InFam b fam) r a b fam c
+    => ProofFocus r a b fam c
 \end{lstlisting}}
 \end{CenteredBox}
 \caption{Proof of membership of a family of datatypes.}
@@ -586,228 +609,93 @@ Note that the type of the current focus is not reflected in the \K{Contexts} dat
 
 \subsubsection{Type-level Differentiation}
 
-McBride~\cite{McBride2001} studies a relation between the one-hole context definition and \emph{partial differentiation} from calculus: he shows that the type of the context for an arbitrary (regular) type can be derived mechanically from that type by means of a list of differentiation \emph{rules} that serve as formulaic instructions for computing the type in type-level programming. Yakushev~et~al.~\cite{MuRec2009} then demonstrate that the method can be generalized for mutually recursive datatypes. We adapt that technique to \textsf{generics-sop}, and now need a few auxiliary type-level functions to implement the computation of the context type. Those functions, defined recursively via type families, provide algebraic operations for lists of types (which we regard as sums and products of types): addition and multiplication. Specifically, we define addition \K{.++} of two sums of products (SOP) of types, multiplication \K{.*} of a SOP by a single type, and multiplication \K{.**} of a SOP by a product of types, as shown in Figure~\ref{fig:type-arithmetic}.
-\begin{figure}[h]
-\begin{CenteredBox}
-{\lset
+McBride~\cite{McBride2001} studies a relation between the one-hole context definition and \emph{partial differentiation} from calculus: he shows that the type of the context for an arbitrary (regular) type can be derived mechanically from that type by means of a list of differentiation \emph{rules} that serve as formulaic instructions for computing the type in type-level programming. Yakushev~et~al.~\cite{MuRec2009} then demonstrate that the method can be generalized for mutually recursive datatypes. We adapt that technique to \textsf{generics-sop}, and now need a few auxiliary type-level functions to implement the computation of the context type. Those functions, defined recursively via type families, provide algebraic operations for lists of types (which we regard as sums and products of types): addition and multiplication. Specifically, we introduce addition \K{.++} of two sums of products (SOP) of types, multiplication \K{.*} of a SOP by a single type, and multiplication \K{.**} of a SOP by a product of types. The definition of the latter uses \K{.*}.
+
+The addition operation just appends two type-level lists of lists (sums of products), multiplication by a type adds the type to the head of each inner list of the sum (here we see multiplication of a product and the distributive property of multiplication over addition, just as in arithmetic of numbers), and multiplication by a product appends the list to the head of each inner product of the sum. We define multiplication by a type below. The definitions for the other type-level operations are similar.
 \begin{lstlisting}
-(/\textbf{\textrm{SOP addition}}/)
-
-type family (.++) (xs :: [[*]]) (ys :: [[*]]) :: [[*]] where
-  (x ': xs) .++ ys = x ': (xs .++ ys)
-  '[]       .++ ys = ys
-infixr 6 .++
-
-(/\vspace{-0.3cm}/)
-(/\textbf{\textrm{SOP-by-type multiplication}}/)
-
 type family (.*) (x :: *) (ys :: [[*]]) :: [[*]] where
   x .* (ys ': yss) = (x ': ys) ': (x .* yss)
   _ .* '[]         = '[]
-infixr 7 .*
+\end{lstlisting}
 
-(/\vspace{-0.3cm}/)
-(/\textbf{\textrm{SOP-by-product multiplication}}/)
-
-type family (.**) (xs :: [*]) (ys :: [[*]]) :: [[*]] where
-  (x ': xs) .** yss = x .* (xs .** yss)
-  '[]       .** yss = yss
-infixr 7 .**
-\end{lstlisting}}
-\end{CenteredBox}
-\caption{Algebraic operations on type-level sums and products.}
-\label{fig:type-arithmetic}
-\end{figure}
-
-The addition operation just appends two type-level lists of lists (sums of products), multiplication by a type adds the type to the head of each inner list of the sum (here we see multiplication of a product and the distributive property of multiplication over addition, just as in arithmetic of numbers), and multiplication by a product appends the list to the head of each inner product of the sum. Again, kind \K{[*]} here denotes products, and \K{[[*]]} denotes sums (of products), so the relation with arithmetic of numbers in these definitions becomes more clear if one realizes that an empty sum \K{'[] :: [[*]]} corresponds to $1$, and an empty product \K{'[] :: [*]} corresponds to $0$. We also specify, through the \K{infixr} declaration, that multiplication has a higher priority than addition.
+Again, kind \K{[*]} denotes products, and \K{[[*]]} denotes sums (of products), so the relation with arithmetic of numbers becomes more clear if one realizes that an empty sum \K{'[] :: [[*]]} corresponds to $0$, and an empty product \K{'[] :: [*]} corresponds to $1$.
 
 \subsubsection{Context Frame}
 
-At this point, we can implement differentiation of a product of types and, therefore, the computation of a context frame type. 
+At this point, we can implement differentiation of a product of types and, therefore, the computation of a context frame type\footnote{The actual definitions slightly differ from ones, presented in the following. We omit some implementation details for simplicity.}. 
 
-The definition of differentiation, shown in Figure~\ref{fig:diff-prod}, resembles its analogue from calculus, but it is now generalized for the setting of families of datatypes: the differentiation of the single type reflected by a one-element list here results in $0$ (reflected by \K{'[]}) if that is not in the family and hence is regarded as a constant, otherwise it results in $1$. When differentiation gives $1$, it is actually the hole, which we express by defining the unit type \K{Hole}. Reflecting this type in the context is helpful when we traverse the context representation to plug the hole. We use the empty type \K{End} to distinguish the case when the hole is found at the end of the list, in order not to add that into the result twice. The sum \K{'[ '[]]} represents a unit type that is exactly $1$. We also use type-level \K{If} that returns its second argument for \K{'True}, and the third one otherwise. We do not give its definition here, as it is straightforward.
-\begin{figure}[t]
-\begin{CenteredBox}
-{\lset
+The definition of differentiation resembles its analogue from calculus, but it is now generalized for the setting of families of datatypes:
 \begin{lstlisting}
-data Hole = Hole
-data End
-
 type family DiffProd (fam :: [*]) (xs :: [*]) :: [[*]] where
   DiffProd _   '[]       = '[]
-  DiffProd fam '[x]      = If (InFam x fam) '[ '[Hole]] '[]
-  DiffProd fam '[End, x] = If (InFam x fam) '[ '[]]     '[]
-  DiffProd fam (x ': xs)
-    = Hole .* xs .** DiffProd fam '[End, x] .++
-              x  .*  DiffProd fam xs
-\end{lstlisting}}
-\end{CenteredBox}
-\caption{Differentiation of a product of types.}
-\label{fig:diff-prod}
-\end{figure}
+  DiffProd fam '[x]      = If (InFam x fam) '[ '[]] '[]
+  DiffProd fam (x ': xs) =
+    xs .** DiffProd fam '[x] .++ '[x] .** DiffProd fam xs
+\end{lstlisting}
+The differentiation of the single type reflected by a one-element list here results in $0$ reflected by \K{'[]}, if that is not in the family and hence is regarded as a constant. Otherwise it results in $1$ represented by the sum \K{'[ '[]]}. When differentiation gives $1$, it is actually the hole. We also use type-level \K{If} that returns its second argument for \K{'True}, and the third one otherwise. We do not give its definition here, as it is straightforward.
 
 The following completes the computation of the context type:
 \begin{lstlisting}
-data ConsN = F | N ConsN | None
-  deriving Eq
-
-type family ToContext (n :: ConsN) (fam :: [*])
+type family ToContext (fam :: [*])
                       (code :: [[*]]) :: [[*]] where
-  ToContext _ _ '[] = '[]
-  ToContext n fam (xs ': xss)
-    = Proxy n .* DiffProd fam xs .++ ToContext ('N n) fam xss
+  ToContext _   '[]         = '[]
+  ToContext fam (xs ': xss) =
+    DiffProd fam xs .++ ToContext fam xss
 \end{lstlisting}
-The type family \K{ToContext} derives the type of the context of a datatype performing differentiation of a sum on its code. Since each product from the code matches a sum of multiple products in the context, it is helpful for each product of the context representation, to keep the index of its matching constructor of the datatype. We store the index in the datatype \K{ConsN} adding that to the head of each product but wrapped by \K{Proxy} because we use \K{ConsN} promoted to a kind in the type family, while the products contain types of kind \K{*}. The constructors \K{F} and \K{N} denote ``first'' and ``next'', respectively, and the special constructor \K{None} will be used further to indicate failure of matching indices.
+The type family \K{ToContext} derives the type of the context of a datatype performing differentiation of a sum on its code.
 
-Finally, a context frame has two representations: as a type synonym and as a newtype wrapper:
+Finally, the type of a context frame representation is a type synonym:
 \begin{lstlisting}
-type    CtxCode fam a = ToContext 'F fam (Code a)
-
-newtype Context fam a = Ctx {ctx :: SOP I (CtxCode fam a)}
-\end{lstlisting}
-The wrapper allows GHC to perform type inference where it is doomed to fail with a plain type synonym. On the other hand, the \K{CtxCode} type comes handy in constraints applied to the generic zipper interface functions.
-
-\subsection{Implementing the zipper interface}
-\label{ss:zip-impl}
-
-We now can implement the interface functions of the zipper, which we have previously described. We only demonstrate the implementation of the \K{goDown} function here. This shows the idea of how we can use our idiom for defining the zipper functions, and the source code with the full implementation of the zipper interface is available at our \textsf{GitHub} repository\footnote{\url{https://github.com/Maryann13/Zipper}}.
-
-To move focus down to the leftmost child of the current focal node in the tree, we should analyze the focal subtree's representation to find its first immediate child, and compute its respective context. The following definition of \K{goDown} uses two auxiliary functions: \K{toFirst} and \K{toFirstCtx}.
-\begin{lstlisting}
-goDown :: Loc a fam c -> Maybe (Loc a fam c)
-goDown (Loc (Focus t) cs)
-  = case toFirst t of
-      Just t' -> Just $ Loc t' (Ctxs (toFirstCtx t) cs)
-      _       -> Nothing
-\end{lstlisting}
-The function \K{toFirst} returns its result in the \K{Maybe} monad, and may return \K{Nothing}, if the focal node has no children, that is, we currently focus on the leaf node and cannot go down. The function \K{toFirstCtx} should not fail: if we can move, it computes the context that matches the leftmost subtree selected from the focus' children.
-
-\begin{figure}[t]
-\begin{CenteredBox}
-{\lset
-\begin{lstlisting}
-toFirst :: ∀fam c r a. (Generic a, ToFirst r a fam c)
-        => a -> Maybe (Focus r a fam c)
-toFirst t = appToNP @AllProof toFirstNP $ unSOP $ from t
-
-(/\vspace{-0.3cm}/)
-(/\textbf{\textrm{Proof}}/)
-
-class    All (ProofIn r a fam c) xs => AllProof r a fam c xs
-instance All (ProofIn r a fam c) xs => AllProof r a fam c xs
-
-type ToFirst r a fam c = All (AllProof r a fam c) (Code a)
-
-(/\vspace{-0.3cm}/)
-(/\textbf{\textrm{Processing products}}/)
-
-toFirstNP :: ∀fam c r a xs. All (ProofIn r a fam c) xs
-          => NP I xs -> Maybe (Focus r a fam c)
-toFirstNP (I (x :: b) :* xs)
-  = witness @(InFam b fam) x `mplus` toFirstNP xs
-toFirstNP Nil = Nothing
-\end{lstlisting}}
-\end{CenteredBox}
-\caption{Implementation of \K{toFirst}.}
-\label{fig:toFirst}
-\end{figure}
-
-\subsubsection{toFirst}
-
-We first implement the function \K{toFirst}. Its full definition is displayed in Figure~\ref{fig:toFirst}. The \K{toFirst} function uses the higher-oredered function \K{appToNP} that unwraps the product from \K{NS} and applies the given function to that product. The function \K{toFirstNP} is defined recursively using the proof we have defined for families: it traverses the product until it finds the first recursive node by means of \K{witness} that for the node \K{x} of unknown type \K{b}, witnesses its membership of the family, or else returns \K{Nothing}. To provide the proof for the representation code of a datatype, we define the proof for all products in a sum, and pass this proof through explicit type application to \K{appToNP} which takes a constrained function. The \K{appToNP} function is defined similarly to \K{subtermsNS} from Section~\ref{sec:recursion-problem}, and we omit its definition here.
-
-\subsubsection{toFirstCtx}
-
-The definition of \K{toFirstCtx} is more complicated, as it performs the computation of the context. The implementation comprises several steps including type- and term-level programming. In the following, we systematically construct the context representation from the given generic representation of a datatype.
-
-At first, for a datatype's given constructor represented by \K{NP}, we build its matching constructor of the context. All constructors of the context have the same shape as the constructors of its respective datatype but with a hole at one of points of recursion---we are now computing the context with the first recursive node deleted. Assuming that we have the product type for the context computed, we can compute the product by matching on that type:
-\begin{lstlisting}
-class FromFstRec (ys :: [*]) (xs :: [*]) where
-  fromFstRec :: NP I xs -> NP I ys
-
-instance FromFstRec (Hole ': xs) (x ': xs) where
-  fromFstRec (_ :* xs) = I Hole :* xs
-instance FromFstRec ys xs
-      => FromFstRec (x ': ys) (x ': xs) where
-  fromFstRec (x :* xs) = x :* fromFstRec xs
-instance FromFstRec '[] '[] where
-  fromFstRec _ = Nil
-\end{lstlisting}
-Note that the first type parameter in the \K{FromFstRec} class is the index type list of the result \K{NP}---this order of type variables remains for type application through which we will supply the computed type.
-
-Once we have constructed the product, we have to build the sum representing the choice of that product. If we have the index of the chosen constructor for the datatype, the one that we find for its context can be computed as follows:
-\begin{lstlisting}
-type family CtxConsN (xss :: [[*]]) (n :: ConsN) :: ConsN where
-  CtxConsN '[]                      _ = 'None
-  CtxConsN ((Proxy n  ': _) ': _  ) n = 'F
-  CtxConsN ((Proxy n' ': _) ': xss) n = 'N (CtxConsN xss n)
-\end{lstlisting}
-The list \K{xss} here is expected to be the context code, which this traverses until the first product storing the constructor index equal to the given one, i.~e., the context's first constructor matching with the chosen constructor of the datatype.
-
-To construct the sum with the computed index and product, we again need a proof to witness that the product is type-consistent with the constructor choice. To choose the constructor from the context code, we can adopt \textsf{generics-sop}'s \emph{injections}\footnote{The actual definition of the type of injections in \textsf{generics-sop} slightly differs from this. We adapt that for presentation.}:
-\begin{lstlisting}
-injections :: ∀xs f. SListI xs => NP (Inj f xs) xs
-
-newtype Inj f xs a = Inj {apInj :: f a -> K (NS f xs) a}
-\end{lstlisting}
-For \K{f} instantiated to \K{NP I} and \K{xs} to be the sum of products reflecting a representation code, \K{injections} creates a product of all constructor choices that inject appropriate constructor arguments into each sum. We can use injections to choose the one that matches the obtained index.
-
-We can witness the choice using a variant of the type-safe cast we have defined in Section~\ref{sec:handling-recursion}, which takes the result of the equality predicate:
-\begin{lstlisting}
-typeCastEq :: ∀eq a b. DecideEq eq a b => b -> Maybe a
-\end{lstlisting}
-In the following definition, \K{f} is supposed to be instantiated to \K{Inj (NP I) xss} where \K{xss} reflects the code of the context\footnote{This might be simplified by using a singleton type for \K{ConsN} instead of defining a type class function. However, when using a singleton, the recursive definition of \K{toFirstCtx} we give further requires a constraint on its function signature that leads to a nonterminating computation.}:
-\begin{lstlisting}
-class    DecideEq (Equal a b) (f a) (f b) => ProofF f a b
-instance DecideEq (Equal a b) (f a) (f b) => ProofF f a b
-
-class ConsNInj (n :: ConsN) (ys :: [*]) where
-  consNInj :: All (ProofF f ys) xss => NP f xss -> f ys
-
-instance ConsNInj n xs => ConsNInj ('N n) xs where
-  consNInj (_ :* xss) = consNInj @n xss
-  consNInj Nil        = impossible
-instance ConsNInj 'F xs where
-  consNInj ((xs :: f xs) :* _)
-    = fromMaybe impossible $ typeCastEq @(Equal xs ys) xs
-  consNInj Nil = impossible
-instance ConsNInj 'None xs where
-  consNInj _ = impossible
-
-impossible :: a
-impossible = error "impossible"
-\end{lstlisting}
-As long as the constructor index and product type are computed correctly, the proof should never fail (\K{impossible}). And when it passes, this ensures by type check that the constructor choice for the given product type is faithful.
-
-Finally, we define a function that applies the injection and returns the constructed context for the given product, representing its constructor arguments, and index of that constructor. The type of \K{injections} below will be inferred from the return type of the context.
-\begin{lstlisting}
-type AppInj n xs ctx = (ConsNInj n xs, SListI ctx,
-                        All (ProofF (Inj (NP I) ctx) xs) ctx)
-
-appInjCtx :: ∀n xs fam a. AppInj n xs (CtxCode fam a)
-          => NP I xs -> Context fam a
-appInjCtx np
-  = Ctx $ SOP $ unK $ apInj (consNInj @n injections) np
+type Context fam a = SOP I (ToContext fam (Code a))
 \end{lstlisting}
 
-The definition of \K{toFirstCtx} can now be given using the defined functions \K{appInjCtx} and \K{fromFstRec}. The following makes use of a type-level function \K{FstRecToHole} to compute the product type by replacing the first recursive occurrence in the given datatype's product list with type \K{Hole}. Its definition is straightforward, and is omitted here.
+
+\section{Discussion}
+\label{sec:discussion}
+
+In this section, we give a discussion of some concerns relating to the scope and user-friendliness of the introduced no-overlap technique for handling recursion.
+
+\subsubsection{Polymorphic recursion}
+
+The approach, described in this paper, is applicable to a range of datatypes that are \emph{monomorphically recursive}. Any of those datatypes has the same type parameters in the left-hand side of its definition and at its recursion points (e.g. \K{Tree a} from Section~\ref{sec:sop-view}). We can go further and proceed with a solution for generic functions, which covers some datatypes whose type parameters in each recursive knot may differ from those in its parent. It turns out, as we will show below, that the solution allows for datatypes with a ``simple'' form of \emph{polymorphic recursion}, but fails to work for nested~\cite{Bird1998} datatypes.
+
+Assume we have a polymorphically recursive datatype \K{PolyRec a} defined in terms of a type family \K{Poly}:
 \begin{lstlisting}
-toFirstCtx :: ∀fam c a. (Generic a, ToFirstCtx fam a)
-           => a -> Context fam a
-toFirstCtx t = toFirstCtxNS @'F $ unSOP $ from t
+data PolyRec a = Tail a | Rec a (PolyRec (Poly a))
 
-toFirstCtxNS :: ∀n fam a xss. ToFirstCtx' fam a n xss
-             => NS (NP I) xss -> Context fam a
-toFirstCtxNS (S ns) = toFirstCtxNS @('N n) ns
-toFirstCtxNS (Z (np :: NP I xs))
-  = appInjCtx @(CtxConsN (CtxCode fam a) n) $
-        I (Proxy @n) :* fromFstRec @(FstRecToHole fam xs) np
-
-type ToFirstCtx fam a = ToFirstCtx' fam a 'F (Code a)
+type family Poly a where
+  Poly Bool = Char
+  Poly Char = Bool
+  Poly a    = a
 \end{lstlisting}
-The \K{ToFirstCtx'} constraint here is a complex constraint for use of \K{appInjCtx} and \K{fromFstRec}, which involves extra type classes and a bit of type-level programming to deduce those particular constraints. Its definition is given in the extended version of the paper in Technical Report. We omit this here for reasons of space.
 
-We have established the mechanism of translation, which is cumbersome but verifying, via the proof, that the constructed context will have the correct type for any given datatype and family. The other functions in the zipper interface can be implemented according to this technique.
+For managing polymorphic recursion in this datatype, we can write an analogue of the \K{Equal} type family from Section~\ref{sec:handling-recursion}, which ignores type parameters when checking two polymorphic types. Since any datatype with type parameters \K{f a b c ...} has kind \K{* -> (* -> (* -> ...))}, a \K{PolyEq} type family can be defined thus:
+\begin{lstlisting}
+type family PolyEq (a :: k) (x :: k) :: Bool where
+  PolyEq (f a) (g b) = PolyEq f g
+  PolyEq a     a     = 'True
+  PolyEq _     _     = 'False
+\end{lstlisting}
+
+The function \K{gshow} from Section~\ref{subsec:gshow} can be reimplemented by using this type family instead of \K{Equal}. The only piece of its definition must be changed as well in order to recursively invoke the function each time with a new type (with the proper change in the \K{CaseRecShow} definition):
+\begin{lstlisting}
+instance Show  a => CaseShow 'False a where
+  caseShow' = show
+instance GShow a => CaseShow 'True  a where
+  caseShow' = gshow
+\end{lstlisting}
+
+Unfortunately, this approach, albeit working well for datatypes defined like \K{PolyRec a}, becomes unsuitable for nested datatypes, such as one below:
+\begin{lstlisting}
+data Nested a = Epsilon | Nest a (Nested [a])
+\end{lstlisting}
+The culprit is the constraint \K{All2 (CaseRecShow a) (Code a)} that now turns out to be a root of nonterminating computation of the constraint, because of the \K{GShow a} instance context above.
+
+Nevertheless, there is a useful example of a generic operation that uses the recursive structure of data, but has not recursive calls in itself---and, therefore, can deal with nested datatypes. \emph{Generic generic programming}~\cite{MagLoeh2014} is a technique of defining translations between different generic programming universes. In our setting, it is possible to define a translation from \textsf{generics-sop} to another library with an explicit encoding of recursive positions, such as \textsf{regular}~\cite{VanNoort2008}. This usually needs only to detect recursion points, because the most of generic views provide shallow conversion functions.
+
+\subsubsection{Usability}
+
+The shown no-overlap technique may involve a lot of multiple constraints on generic functions. Those complex constraints introduce certain limitations to the approach and make it difficult in use. Especially, making a mistake in type-level programming with constraints which can usually be abbreviated in a code, one can get an embarrassing long error message where multiple constraints are displayed. Unfortunately, compound error messages on deducing constraints complicate the use of the technique, particularly for non-specialists in datatype-generic programming, in comparison with the existing approaches to treating recursion.
 
 
 \section{Related work}
@@ -828,14 +716,14 @@ Several works show how to define the Zipper~\cite{Huet1997} generically for regu
 
 Defining generic functions, which consider recursion points, is easy within generic views that are explicit about recursion in the datatype representation. Not so much otherwise. Although, there are some approaches that address the problem by means of global or local overlaps. We have developed the technique that allows one to define generic functions that treat recursion without its explicit encoding and without overlap. 
 
-We have demonstrated that the method suits for advanced recursive schemes, such as the generic zipper interface. Also, it supports families of mutually recursive datatypes. 
+We have demonstrated that the method suits for advanced recursive schemes, such as the generic zipper interface. Also, it supports families of mutually recursive datatypes.
 
 Arguably, it is still easier to treat recursion when ``explicit'' encoding is used. On the other hand, we believe, once the problem of handling recursion is shown to be manageable, new generic universes shall emerge, not worrying about the recursion support, but rather focusing on other generic programming problems.
 
 \section*{Acknowledgments}
 \label{sec:acks}
 
-We are grateful to Julia Belyakova, who helped to proof-read certain parts of the paper, 
+We are thankful to Andres L\"{o}h for his helpful recommendations and comments on this paper and to the participants of the TFP symposium for their questions and suggestions. We are also grateful to Julia Belyakova, who helped to proof-read certain parts of the paper, 
 and to the participants of the Seminar on Programming Languages and Compilers at 
 I.I.~Vorovich Institute of Mathematics, Mechanics, and Computer Science (Southern Federal
 University, Russia), where we presented partial results of the work and got valuable feedback.

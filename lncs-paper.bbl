@@ -8,6 +8,11 @@ Adams, M.D.: Scrap your zippers: A generic zipper for heterogeneous types. In:
   Proceedings of the 6th ACM SIGPLAN Workshop on Generic Programming. pp.
   13--24. WGP '10, ACM, New York, NY, USA (2010). \doi{10.1145/1863495.1863499}
 
+\bibitem{Bird1998}
+Bird, R., Meertens, L.: Nested datatypes. In: Jeuring, J. (ed.) Mathematics of
+  Program Construction. pp. 52--67. Springer Berlin Heidelberg, Berlin,
+  Heidelberg (1998)
+
 \bibitem{Chakravarty2009}
 Chakravarty, M.M.T., Ditu, G.C., Leshchinskiy, R.: Instant generics: Fast and
   easy (2009), \url{http://www.cse.unsw.edu.au/~chak/papers/CDL09.html}
@@ -97,6 +102,11 @@ Magalh{\~{a}}es, J.P., L{\"{o}}h, A.: A formal comparison of approaches to
   datatype-generic programming. In: Proceedings Fourth Workshop on
   Mathematically Structured Functional Programming, MSFP@ETAPS 2012, Tallinn,
   Estonia, 25 March 2012. pp. 50--67 (2012). \doi{10.4204/EPTCS.76.6}
+
+\bibitem{MagLoeh2014}
+Magalh{\~a}es, J.P., L{\"o}h, A.: Generic generic programming. In: Flatt, M.,
+  Guo, H.F. (eds.) Practical Aspects of Declarative Languages. pp. 216--231.
+  Springer International Publishing, Cham (2014)
 
 \bibitem{McBride2001}
 McBride, C.: The derivative of a regular type is its type of one-hole contexts
