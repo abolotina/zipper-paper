@@ -229,10 +229,10 @@ subtermsNS (S ns) = subtermsNS ns
 subtermsNS (Z np) = subtermsNP np
 
 subtermsNP :: ∀a xs. NP I xs -> [a]
-subtermsNP p (I y :* ys)
+subtermsNP (I y :* ys)
   | typeOf @a y = castEq y : subtermsNP ys
   | otherwise   = subtermsNP ys
-subtermsNP _ Nil = []
+subtermsNP Nil = []
 \end{lstlisting}
 The function \K{subterms} translates the term to its representation, unwrapping the sum of products from \K{SOP}, and passes that to the auxiliary function \K{subtermsNS}. The latter merely traverses the sum and, once reaches the product,  passes it further to \K{subtermsNP}.
 
@@ -316,7 +316,7 @@ subtermsNP (I (y :: x) :* ys) =
   case castEq y of
     Just t  -> t : subtermsNP ys
     Nothing -> subtermsNP  ys
-subtermsNP _ Nil = []
+subtermsNP Nil = []
 \end{lstlisting}
 
 As a side note, we make use of the \textsf{ScopedTypeVariables} extension in the definition above, as the type of the element being matched does not appear in the function signature, since it may match an empty list. 
@@ -359,7 +359,7 @@ instance GShow a => CaseShow 'True  a a where
 We provide a synonym for the \K{CaseShow (Equal a b) a b} instance, which we call \K{CaseRecShow}, as before with \K{ProofEq}; likewise a synonym for the matching function:
 \begin{lstlisting}
 caseShow :: ∀a b. CaseRecShow a b => b -> String
-caseShow t = caseShow' @(Equal a b) @a t
+caseShow = caseShow' @(Equal a b) @a
 \end{lstlisting}
 
 The resulting function \K{gshow} is a subject of a number of constraints abbreviated by a \K{GShow} synonym:
@@ -393,12 +393,12 @@ This is a consequence of \K{gshow} from \textsf{basic-sop} not treating recursiv
 \label{subsec:abstract-pattern}
 
 
-We can continue along the lines of the previous examples to consider the approach separately from concrete ones. One can use the technique abstractedly, following the pattern below:
+We can continue along the lines of the previous examples to consider the approach separately from concrete ones. One can use the technique, following the abstracted pattern below:
 
 \begin{lstlisting}
 class DispatchRec_Aux (p :: Bool)
                     (a_1 :: k_1) ... (a_n :: k_n) (b :: *) where
-  dispatchRec_Aux :: b -> X
+  dispatchRec_Aux :: X b
 
 instance C_1 ... => DispatchRec_Aux 'False a_1 ... a_n b where
   dispatchRec_Aux = f_1
@@ -410,11 +410,13 @@ class    DispatchRec_Aux (P a_1 ... a_k b) a_1 ... a_k ... a_n b
 instance DispatchRec_Aux (P a_1 ... a_k b) a_1 ... a_k ... a_n b
   => DispatchRec a_1 ... a_n b
 
-dispatchRec :: ∀a_1 ... a_n b. DispatchRec a_1 ... a_n b => b -> X
+dispatchRec :: ∀a_1 ... a_n b. DispatchRec a_1 ... a_n b => X b
 dispatchRec = dispatchRec_Aux @(P a_1 ... a_k b) @a_1 ... @a_k ... @a_n
 \end{lstlisting}
 
 This machinery employes the abstract multi-place predicate \K{P} on types, supposed to be a closed typed family, to resolve the overlap of two dispatch branches, as captured by \K{DispatchRec__Aux}. The predicate \K{P} generalizes \K{Equal} to an arbitrary relation on types, so that one can model, e.g., subtyping for some domain-specific language. The introduction of the associated type class \K{DispatchRec} provides a handy interface for dispatch. The dispatch function \K{dispatchRec} decides on one of the functions \K{f_1} and \K{f_2}---depending on whether the predicate \K{P} is true for types \K{a_1}, \dots, \K{a_k}, \K{b}.
+
+For consumer functions, such as \K{subterms} and \K{gshow}, the type \K{X b} typically is instantiated with \K{b -> X} for some datatype \K{X}. The pattern fits equally well for defining producers, such as \K{garbitrary} from the \textsf{basic-sop} package, where \K{X b} would be instantiated with \K{Gen b}.
 
 
 \section{The generic zipper}
