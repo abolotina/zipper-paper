@@ -416,7 +416,7 @@ dispatchRec = dispatchRec_Aux @(P a_1 ... a_k b) @a_1 ... @a_k ... @a_n
 
 This machinery employes the abstract multi-place predicate \K{P} on types, supposed to be a closed typed family, to resolve the overlap of two dispatch branches, as captured by \K{DispatchRec__Aux}. The predicate \K{P} generalizes \K{Equal} to an arbitrary relation on types, so that one can model, e.g., subtyping for some domain-specific language. The introduction of the associated type class \K{DispatchRec} provides a handy interface for dispatch. The dispatch function \K{dispatchRec} decides on one of the functions \K{f_1} and \K{f_2}---depending on whether the predicate \K{P} is true for types \K{a_1}, \dots, \K{a_k}, \K{b}.
 
-For consumer functions, such as \K{subterms} and \K{gshow}, the type \K{X b} typically is instantiated with \K{b -> X} for some datatype \K{X}. The pattern fits equally well for defining producers, such as \K{garbitrary} from the \textsf{basic-sop} package, where \K{X b} would be instantiated with \K{Gen b}.
+For consumer functions, such as \K{subterms} and \K{gshow}, the type \K{X b} typically is instantiated with \K{b -> T} for some datatype \K{T}. The pattern fits equally well for defining producers, such as \K{garbitrary} from the \textsf{basic-sop} package, where \K{X b} would be instantiated with \K{Gen b}.
 
 
 \section{The generic zipper}
