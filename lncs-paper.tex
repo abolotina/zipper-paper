@@ -236,7 +236,7 @@ subtermsNP Nil = []
 \end{lstlisting}
 The function \K{subterms} translates the term to its representation, unwrapping the sum of products from \K{SOP}, and passes that to the auxiliary function \K{subtermsNS}. The latter merely traverses the sum and, once reaches the product,  passes it further to \K{subtermsNP}.
 
-The algorithm of \K{subtermsNP} is straightforward---it traverses the product, appending current element to the result list if its type is the same as of the term \K{t}, otherwise skipping the element. We use GHC's \textsf{TypeAppications} extension to pass that type.
+The algorithm of \K{subtermsNP} is straightforward---it traverses the product, appending the current element to the result list if its type is the same as of the original term, otherwise skipping the element. We use GHC's \textsf{TypeAppications} extension to pass that type.
 
 \subsubsection{Overlap-based implementation}
 
