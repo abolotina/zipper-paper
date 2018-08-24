@@ -87,11 +87,6 @@ Czech Technical University in Prague, Prague, Czech Republic\\
 \begin{abstract}
 Many of the extensively used libraries for datatype-generic programming offer a fixed-point view on datatypes to express their recursive structure. However, some other approaches, especially the ones based on sums of products, avoid the fixed point encoding. They facilitate implementation of generic functions that do not require to look at the recursive knots in a datatype representation, but raise issues otherwise. A widely used and unwelcome solution to the problem resorts to overlapping instances. In this paper, we present an alternative approach that uses closed type families to eliminate the need of overlap for handling recursion in datatypes. Moreover, we show that this idiom allows for generic programming with families of mutually recursive datatypes.
 
-
-\textbf{Category:} full research paper.
-
-\textbf{Studentship:} both authors are students.
-
 %The \textsf{generics-sop} library is an approach to representing data using $n$-ary sums and products that both are list-like structures, which is different from the classical view where datatypes are expressed by separate binary sums and products, and it does not encode recursive knots explicitly as with the fixed-point view. We choose this approach as a case study to demonstrate our solution.
 
 \keywords{Datatype-generic programming \and Sums of products \and Recursion \and Overlapping instances \and Closed type families \and Zipper \and Mutually recursive datatypes \and Haskell.}
@@ -689,7 +684,7 @@ Unfortunately, this approach, albeit working well for datatypes defined like \K{
 \begin{lstlisting}
 data Nested a = Epsilon | Nest a (Nested [a])
 \end{lstlisting}
-The culprit is the constraint \K{All2 (CaseRecShow a) (Code a)} that now turns out to be a root of nonterminating computation of the \K{GShow} constraint for K{[a]}, K{[[a]]}, and so on ad infinitum.
+The culprit is the constraint \K{All2 (CaseRecShow a) (Code a)} that now turns out to be a root of nonterminating computation of the \K{GShow} constraint for \K{[a]}, \K{[[a]]}, and so on ad infinitum.
 
 Still, one can think of problems where a generic operation uses the recursive structure of data, but has no recursive calls---and, therefore, can tolerate nested datatypes. An example of this kind of problems is \emph{generic generic programming}~\cite{MagLoeh2014}, a technique of defining translations between different generic programming universes. In our setting, it is possible to define a translation from \textsf{generics-sop} to another library with an explicit encoding of recursive positions, such as \textsf{regular}~\cite{VanNoort2008}. This usually needs only to detect recursion points, because the most of generic views provide shallow conversion functions.
 
