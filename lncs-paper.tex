@@ -85,7 +85,7 @@ Czech Technical University in Prague, Prague, Czech Republic\\
 \maketitle              % typeset the header of the contribution
 %
 \begin{abstract}
-Many of the extensively used libraries for datatype-generic programming offer a fixed-point view on datatypes to express their recursive structure. However, some approaches, based on sums of products, do not use a fixed point. They allow for generic functions that do not require to look at the recursive knots in a datatype representation, but raise issues otherwise. A known and unwelcome solution is the use of overlapping instances. We present an alternative approach that uses closed type families to eliminate the need of overlap for handling recursion in datatypes. Moreover, we show that our idiom allows for families of mutually recursive datatypes.
+Many of the extensively used libraries for datatype-generic programming offer a fixed-point view on datatypes to express their recursive structure. However, some other approaches, especially the ones based on sums of products, avoid the fixed point encoding. They facilitate implementation of generic functions that do not require to look at the recursive knots in a datatype representation, but raise issues otherwise. A widely used and unwelcome solution to the problem resorts to overlapping instances. In this paper, we present an alternative approach that uses closed type families to eliminate the need of overlap for handling recursion in datatypes. Moreover, we show that this idiom allows for generic programming with families of mutually recursive datatypes.
 
 
 \textbf{Category:} full research paper.
@@ -118,9 +118,7 @@ The overlap problem also strikes in the security setting when code is compiled a
 
 The problem of using overlapping instances was first addressed by Kiselyov~et~al.~\cite{Kiselyov2004}. Their technique for avoiding overlap relies on a Haskell 98 extension for functional dependencies. The solution proposes two variants of defining a type-level equality predicate, a type class, and then systematically localizes overlap by circumventing it with that predicate. The first version of type equality maps types to unique type representations and compares them. That variant and its later implementation with type families~\cite{Kiselyov2012} fully eliminate \textsf{OverlappingInstances}. Although, each type needs a representation instance to be derived---by means of Template Haskell or GHC. The most generic solution for type equality, the second version, again makes use of overlapping instances, however.
 
-Closed type families, today's Haskell extension, has been proposed primarily to obviate the need for overlapping instances. But it does not seem to be well-known that they have useful application in the generic programming area.
-
-We follow up the overlap-avoiding idea from the existing approach and make the following contributions.
+Closed type families, today's Haskell extension, has been proposed primarily to obviate the need for overlapping instances. In the area of generic programming, the extension does not seem to be widely leveraged yet. Exploiting this observation, we make the following contributions.
 \begin{itemize}
 \item We describe the problem with the current approach of SOP in detail (Section~\ref{sec:sop-problem}).
 \item We introduce an idiom that overcomes the problem. The approach avoids both, the use of overlapping instances and changing a generic representation (Section~\ref{sec:handling-recursion}).
@@ -131,7 +129,7 @@ We follow up the overlap-avoiding idea from the existing approach and make the f
 \item We note, that our approach can contribute to the \textsf{generics-sop}'s one eliminating some boilerplate instance declarations, which necessarily  arise in practice as a consequence of absence of information about recursion points. An example of that, taken from the \textsf{basic-sop}~\cite{basic-sop} package, is discussed in Section~\ref{subsec:gshow}.
 \end{itemize}
 
-We believe that our idea is suitable for any sum-of-products approach that do not exploit the fixed point view and thus subject to the problem. We choose the \textsf{generics-sop} approach as a case study because it appears to be a widely applicable library and builds on powerful language extensions implemented in GHC.
+We believe that the idea presented is suitable for any sum-of-products approach that does not employ the fixed point view and thus subject to the problem. We choose the \textsf{generics-sop} library as a case study because it appears to be a widely applicable library and builds on powerful language extensions implemented in GHC.
 
 \section{The SOP universe and the problem}
 \label{sec:sop-problem}
@@ -217,9 +215,7 @@ We illustrate the problem through a short example. The \textsf{QuickCheck} libra
 
 \subsubsection{Non-implementation}
 
-We describe a straghtforward implementation based on plain pattern matching, for reasons of simplicity. However, in Section~\ref{subsec:solve-subterms}, we show a better high-level solution using one of the primary advantages of \textsf{generics-sop}---high-level traversal functions.
-
-The SOP-based \K{subterms} definition is outlined below:
+We outline one possible approach to SOP-based implementation of \K{subterms} below. It gives a clear idea of our intention, but so far, we miss the necessary toolbox (in particular, \K{typeOf} / \K{castEq}) to finish it.
 \begin{lstlisting}
 subterms :: Generic a => a -> [a]
 subterms = subtermsNS . unSOP . from
@@ -237,6 +233,8 @@ subtermsNP Nil = []
 The function \K{subterms} translates the term to its representation, unwrapping the sum of products from \K{SOP}, and passes that to the auxiliary function \K{subtermsNS}. The latter merely traverses the sum and, once reaches the product,  passes it further to \K{subtermsNP}.
 
 The algorithm of \K{subtermsNP} is straightforward---it traverses the product, appending the current element to the result list if its type is the same as of the original term, otherwise skipping the element. We use GHC's \textsf{TypeAppications} extension to pass that type.
+
+Note that our implementation uses plain pattern matching for reasons of simplicity. However, in Section~\ref{subsec:solve-subterms}, we show a higher-level solution using one of the primary advantages of \textsf{generics-sop}---high-level traversal functions.
 
 \subsubsection{Overlap-based implementation}
 
@@ -609,7 +607,7 @@ The type parameters have the same meaning as for the \K{Loc} datatype. The \K{Zi
 
 Note that the type of the current focus is not reflected in the \K{Contexts} datatype.
 
-\subsubsection{Type-level Differentiation}
+\subsubsection{Type-Level Differentiation}
 
 McBride~\cite{McBride2001} studies a relation between the one-hole context definition and \emph{partial differentiation} from calculus: he shows that the type of the context for an arbitrary (regular) type can be derived mechanically from that type by means of a list of differentiation \emph{rules} that serve as formulaic instructions for computing the type in type-level programming. Yakushev~et~al.~\cite{MuRec2009} then demonstrate that the method can be generalized for mutually recursive datatypes. We adapt that technique to \textsf{generics-sop}, and now need a few auxiliary type-level functions to implement the computation of the context type. Those functions, defined recursively via type families, provide algebraic operations for lists of types (which we regard as sums and products of types): addition and multiplication. Specifically, we introduce addition \K{.++} of two sums of products (SOP) of types, multiplication \K{.*} of a SOP by a single type, and multiplication \K{.**} of a SOP by a product of types. The definition of the latter uses \K{.*}.
 
@@ -659,7 +657,7 @@ In this section, we give a discussion of some concerns relating to the scope and
 
 \subsubsection{Polymorphic recursion}
 
-The approach, described in this paper, is applicable to a range of datatypes that are \emph{monomorphically recursive}. Any of those datatypes has the same type parameters in the left-hand side of its definition and at its recursion points (e.g. \K{Tree a} from Section~\ref{sec:sop-view}). We can go further and proceed with a solution for generic functions, which covers some datatypes whose type parameters in each recursive knot may differ from those in its parent. It turns out, as we will show below, that the solution allows for datatypes with a ``simple'' form of \emph{polymorphic recursion}, but fails to work for nested~\cite{Bird1998} datatypes.
+The approach, described in this paper, is applicable to a range of datatypes that are \emph{monomorphically recursive}. Any of those datatypes has the same type parameters in the left-hand side of its definition and at its recursion points (e.g. \K{Tree a} from Section~\ref{sec:sop-view}). We can go further and proceed with a solution for generic functions, which covers some datatypes whose type parameters in each recursive knot may differ from those in its parent. It turns out, as we will show below, that the solution allows for datatypes with a ``simple'' form of \emph{polymorphic recursion}, but fails to work for \emph{nested datatypes}~\cite{Bird1998}.
 
 Assume we have a polymorphically recursive datatype \K{PolyRec a} defined in terms of a type family \K{Poly}:
 \begin{lstlisting}
@@ -691,14 +689,13 @@ Unfortunately, this approach, albeit working well for datatypes defined like \K{
 \begin{lstlisting}
 data Nested a = Epsilon | Nest a (Nested [a])
 \end{lstlisting}
-The culprit is the constraint \K{All2 (CaseRecShow a) (Code a)} that now turns out to be a root of nonterminating computation of the constraint, because of the \K{GShow a} instance context above.
+The culprit is the constraint \K{All2 (CaseRecShow a) (Code a)} that now turns out to be a root of nonterminating computation of the \K{GShow} constraint for K{[a]}, K{[[a]]}, and so on ad infinitum.
 
-Nevertheless, there is a useful example of a generic operation that uses the recursive structure of data, but has not recursive calls in itself---and, therefore, can deal with nested datatypes. \emph{Generic generic programming}~\cite{MagLoeh2014} is a technique of defining translations between different generic programming universes. In our setting, it is possible to define a translation from \textsf{generics-sop} to another library with an explicit encoding of recursive positions, such as \textsf{regular}~\cite{VanNoort2008}. This usually needs only to detect recursion points, because the most of generic views provide shallow conversion functions.
+Still, one can think of problems where a generic operation uses the recursive structure of data, but has no recursive calls---and, therefore, can tolerate nested datatypes. An example of this kind of problems is \emph{generic generic programming}~\cite{MagLoeh2014}, a technique of defining translations between different generic programming universes. In our setting, it is possible to define a translation from \textsf{generics-sop} to another library with an explicit encoding of recursive positions, such as \textsf{regular}~\cite{VanNoort2008}. This usually needs only to detect recursion points, because the most of generic views provide shallow conversion functions.
 
-\subsubsection{Usability}
+\subsubsection{Usability and error-reporting}
 
-The shown no-overlap technique may involve a lot of multiple constraints on generic functions. Those complex constraints introduce certain limitations to the approach and make it difficult in use. Especially, making a mistake in type-level programming with constraints which can usually be abbreviated in a code, one can get an embarrassing long error message where multiple constraints are displayed. Unfortunately, compound error messages on deducing constraints complicate the use of the technique, particularly for non-specialists in datatype-generic programming, in comparison with the existing approaches to treating recursion.
-
+The shown no-overlap technique may involve a lot of multiple constraints on generic functions. We tend to abbreviate them with type aliases. Although convenient when reading and writing code, one may encounter a leak in abstraction by making a mistake in client code. In this case, GHC sometimes produces an embarrassingly long error message where multiple underlying constraints are displayed. We currently investigate the \K{TypeError} recent mechanism of GHC which allows for user-defined error messages, specifically targeted for type level-heavy computations.
 
 \section{Related work}
 \label{sec:related-work}
@@ -725,8 +722,8 @@ Arguably, it is still easier to treat recursion when ``explicit'' encoding is us
 \section*{Acknowledgments}
 \label{sec:acks}
 
-We are thankful to Andres L\"{o}h for his helpful recommendations and comments on this paper and to the participants of the TFP symposium for their questions and suggestions. We are also grateful to Julia Belyakova, who helped to proof-read certain parts of the paper, 
-and to the participants of the Seminar on Programming Languages and Compilers at 
+We are thankful to Andres L\"{o}h for his helpful recommendations and comments on the paper. We address some insightful questions and suggestions from participants of the TFP symposium, to whom we are deeply grateful. We thank Julia Belyakova, who helped to proof-read certain parts of the paper, 
+and the participants of the Seminar on Programming Languages and Compilers at 
 I.I.~Vorovich Institute of Mathematics, Mechanics, and Computer Science (Southern Federal
 University, Russia), where we presented partial results of the work and got valuable feedback.
 
