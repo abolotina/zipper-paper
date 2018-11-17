@@ -150,15 +150,12 @@ A classical way to generically express a datatype is to represent its constructo
 %, and \emph{GADTs}~\cite{Schrijvers2009}. -- very old extension, 2003 approx.
 Using these Haskell features, the library provides the generic view and equips it with a rich collection of high-level combinators, such as ones for constructing sums and products, collapsing to homogeneous structures, and others. They form an expressive instrument for defining generic functions in a more succinct and high-level style as compared to the classical binary sum-of-products views.
 
-There are many generic functions that deal with the recursive knots when traversing the structure of datatypes. Some of the most general examples are \emph{maps}~\cite{Magalhaes2010} and \emph{folds}~\cite{Meijer1991}; a more advanced one is a \emph{zipper}~\cite{Huet1997,HiJeLo2004,Adams2010}. For handling recursion, several generic programming approaches express datatypes in the form of polynomial functors closed under fixed points~\cite{MuRec2009,Jansson1997,Loeh2011}. The SOP view naturally supports definitions of functions that do not require a knowledge about recursive occurrences, but otherwise becomes unhandy.
+There are many generic functions that deal with the recursive knots when traversing the structure of datatypes. Some of the most general examples are \emph{maps}~\cite{Magalhaes2010} and \emph{folds}~\cite{Meijer1991}; a more advanced one is a \emph{zipper}~\cite{Huet1997,HiJeLo2004,Adams2010}. For handling recursion, several generic programming approaches express datatypes in the form of polynomial functors closed under fixed points~\cite{MuRec2009,Jansson1997,Loeh2011}. However, the SOP view does not reflect recursion points in generic representation types. So it naturally supports definitions of functions that do not require a knowledge about recursive occurrences, but otherwise becomes unhandy.
 
-One possible solution to the aforementioned shortcoming of SOP is to modify its core by explicitly encoding recursive positions using the fixed-point approach. However, this may complicate the whole framework significantly. Besides, such a decision may lead to extra conversions between the generic views.
+One possible solution to the aforementioned shortcoming of SOP is to modify its core by explicitly encoding recursive positions using the fixed-point approach. However, this may complicate the whole framework significantly. Besides, such a decision may lead to extra conversions between the generic views: the original SOP encoding and the modified one.
 
-Another known solution uses overlapping instances. This, usually unwelcome, Haskell extension complicates reasoning about the semantics of code. In particular, the program behavior becomes unstable, for it can be affected by any module defining more specific instances. Morris and Jones~\cite{Morris2010} extensively discuss the problems arising from overlapping instances.
-% and introduce the type system \textsf{ilab} with a feature called \emph{instance chains} that advances control of overlap. 
-The overlap problem also strikes in the security setting when code is compiled as \K{-XSafe} because GHC does not reflect unsafe overlaps and marks the module as safe~\cite{sh-overlapping}.
-%Kiselyov et al.~\cite{Kiselyov2004} show how to localize overlap for access operations in a systematic way. Using \textit{closed type families}~\cite{Eisenberg2014}, we introduce an idiom that allows us to completely eliminate overlap for handling recursion.
-% -- this should go to Realted Work (if stays in the paper at all)
+Another known solution uses overlapping instances. This, usually unwelcome, Haskell extension complicates reasoning about the semantics of code. In particular, the program behavior becomes unstable, for it can be affected by any module defining more specific instances. Morris and Jones~\cite{Morris2010} extensively discuss the problems arising from overlapping instances. One of those problems is late error reporting, which is a consequence of the fact that GHC resolves overlapping instances at call sites. That is, if there are more than one most specific instances for particular types, GHC does not determine that before one's attempt to use the class function with those types. Another notable problem is lack of specification for overlapping instances, so their behavior depends on a concrete compiler. 
+The overlap problem also strikes in the security setting, when code is compiled as \K{-XSafe}, because GHC does not reflect unsafe overlaps and marks the module as safe~\cite{sh-overlapping}.
 
 The problem of using overlapping instances was first addressed by Kiselyov~et~al.~\cite{Kiselyov2004}. Their technique for avoiding overlap relies on a Haskell 98 extension for functional dependencies. The solution proposes two variants of defining a type-level equality predicate, a type class, and then systematically localizes overlap by circumventing it with that predicate. The first version of type equality maps types to unique type representations and compares them. That variant and its later implementation with type families~\cite{Kiselyov2012} fully eliminate \textsf{OverlappingInstances}. Despite this, each type needs a representation instance to be derived---by means of Template Haskell or GHC. The most generic solution for type equality, the second version, again makes use of overlapping instances, however.
 
@@ -239,7 +236,8 @@ Putting this together, each term of a particular datatype can be represented as 
 
 With the \K{NS} and \K{NP} machinery at hand, SOP defines the \K{Generic} class with conversion functions \K{from} and \K{to}, witnessing the isomorphism between a datatype and its generic representation:
 \begin{lstlisting}[style=fancy]
-type Rep a = SOP I (Code a)
+type    Rep   a = SOP I (Code a)
+newtype SOP f a = SOP {unSOP :: NS (NP f) a}
 
 class All SListI (Code a) => Generic (a :: *) where
   type Code a :: [[*]]
@@ -248,7 +246,7 @@ class All SListI (Code a) => Generic (a :: *) where
 \end{lstlisting}
 The sum of products type, \K{SOP f}, is a newtype-wrapper for \K{NS (NP f)}, and the structural representation \K{Rep} of a datatype \K{a} is a type synonym for a \K{SOP I} of \K{a}'s code. The functions, \K{from} and \K{to}, perform a shallow conversion of the datatype topmost layer---they do not recursively translate the constructor arguments.
 
-We leave out discussion of the \K{SListI} constraint in the \K{Generic} class definition, as it is irrelevant to our work. Although, we do use \K{All} constraint combinator (as in \K{All SListI}) in the following. Therefore, it is worth noting that \K{All} applies a particular constraint (e.g. \K{SListI} above) to each member of a list of types. The usage of constraints as type arguments is allowed due to the \textsf{ConstraintKinds} language extension introducing a dedicated kind \K{Constraint}.
+The \K{SListI} constraint in the \K{Generic} class definition is used in \textsf{generics-sop} to represent type-level index lists at the level of terms as singletons. We leave out discussion of this constraint, as it is irrelevant to our work. Although, we do use \K{All} constraint combinator (as in \K{All SListI}) in the following. Therefore, it is worth noting that \K{All} applies a particular constraint (e.g. \K{SListI} above) to each member of a list of types. The usage of constraints as type arguments is allowed due to the \textsf{ConstraintKinds} language extension introducing a dedicated kind \K{Constraint}.
 
 We have introduced generic representation employed by the SOP library and are ready to describe the problem of handling recursion points, stemming from the representation. 
 
@@ -336,12 +334,12 @@ instance          DecideEq False a b where
 \end{lstlisting}
 If the types \K{a} and \K{b} are the same, the \K{:==:} type from \K{Data.Type.Equality} witnesses the equality.
 
-For every element in a list of all direct subterms of a term we shall provide a proof object witnessing its type (in)equality to the type of the term. This can be done by means of the \K{All} combinator and partially applied dedicated type class \K{ProofEq}, which abbreviates the heavy-weighted interface of \K{DecideEq}:
+For every element in a list of all direct subterms of a term, we shall provide a proof object witnessing its type (in)equality to the type of the term. This can be done by means of the \K{All} combinator and partially applied dedicated type class \K{ProofEq}, which abbreviates the heavy-weighted interface of \K{DecideEq}:
 \begin{lstlisting}[style=fancy]
 class    DecideEq (Equal a b) a b => ProofEq a b
 instance DecideEq (Equal a b) a b => ProofEq a b
 \end{lstlisting}
-The equality proof can then be employed to provide a type-safe cast between two equal types:
+The equality proof can then be employed to provide \K{castEq} (Section~\ref{subsec:recursion-problem}). The definition makes use of \K{castWith}, which performs a type-safe cast between two equal types, using the equality witness \K{b :==: a}:
 \begin{lstlisting}[style=fancy]
 castEq :: ∀a b. ProofEq a b => b -> Maybe a
 castEq t = (\d -> castWith d t) <$> decideEq @(Equal a b)
@@ -451,9 +449,7 @@ compos :: (T -> T) -> T -> T
 \end{lstlisting}
 This can be used, for example, with a datatype \K{Expr} for defining the \K{renameVar} function, updating all variables in a given expression without affecting its other subexpressions:
 \begin{lstlisting}[style=fancy]
-data Expr = EAbs String Expr
-          | EApp Expr Expr
-          | EVar String
+data Expr = EAbs String Expr | EApp Expr Expr | EVar String
 
 renameVar :: Expr -> Expr
 renameVar (EVar x) = EVar $ x ++ "_"
@@ -494,9 +490,7 @@ gcompos f = to . composSOP . from
 
 A fold is a higher-order function that recursively deconstructs a term, using a combining operation on its structure to aggregate the result. For example, consider a fold for a datatype of arithmetic expressions \K{AExpr}:
 \begin{lstlisting}[style=fancy]
-data AExpr = EConst Int
-           | EAdd AExpr AExpr
-           | EMul AExpr AExpr
+data AExpr = EConst Int | EAdd AExpr AExpr | EMul AExpr AExpr
 
 fold.AExpr :: (Int -> r, r -> r -> r, r -> r -> r) -> AExpr -> r
 fold.AExpr f@(f.1, f.2, f.3) e = case e of
@@ -739,7 +733,7 @@ data Focus (r :: *) (a :: *) (fam :: [*])
  Focus :: (Generic b, In b fam, ZipperI r a b fam c)
        => b -> Focus r a fam c
 \end{lstlisting}
-Existential type variable \K{b} represents the type of a focus. We apply a number of predicates to \K{b}, hence we can implement the steps of the navigation without knowing the actual type of a focus. Firstly, the type of a focus should have the \K{Generic} representation. Secondly, it should live \K{In} the list of types we are going to visit. Lastly, it ought to satisfy the set of constraints for the whole zipper interface captured by the \K{ZipperI} predicate. In particular, the predicate ensures that \K{a} is the type of the parent for the focus in the structure under consideration. Also, it guarantees that \K{b} fulfils the constraint \K{c}. Again, we make \K{c} embedded in \K{Loc} by reason of existentiality of \K{b}, which precludes the enforcement of this restriction by means of external \K{All}.
+Existential type variable \K{b} represents the type of a focus. We apply a number of predicates to \K{b}, hence we can implement the steps of the navigation without knowing the actual type of a focus. Firstly, the type of a focus should have the \K{Generic} representation. Secondly, it should live \K{In} the list of types we are going to visit. Lastly, it ought to satisfy the set of constraints for the whole zipper interface captured by the \K{ZipperI} predicate. In particular, the predicate ensures that \K{a} is the type of the parent for the focus in the structure under consideration. Also, it guarantees that \K{b} fulfils the constraint \K{c}.
 
 We implement the \K{In} constraint by means of a type family \K{InFam} exactly along the lines of the \K{Equal} type family defined in the beginning of Section~\ref{sec:handling-recursion}. 
 %~ The following checks a type for membership of a type-level list that we use to express a family:
@@ -1008,7 +1002,6 @@ The idea similar to SOP has been proposed by Kiselyov~et~al.~\cite{Kiselyov2004}
 Morris and Jones~\cite{Morris2010} introduce the type-class system \textsf{ilab}, based on the Haskell 98 class system, with a new feature called ``instance chains''. This enables one to control overlap by using an explicit syntax in instance declarations. The approach resembles if-else chains. But the use of instance chains and local use of overlap leave code error-prone as a consequence of type class openness. Closed type families~\cite{Eisenberg2014} were recently introduced in Haskell to solve the overlap problem.
 
 Several works show how to define the Zipper~\cite{Huet1997} generically for regular~\cite{HiJeLo2004,McBride2001} and mutually recursive~\cite{MuRec2009} types using fixed-point generic views. Adams~\cite{Adams2010} defines a generic zipper for heterogeneous types: a different kind of zipper that can traverse knots of various types, so it does not use the recursive structure.
-
 
 
 \section{Conclusion}
