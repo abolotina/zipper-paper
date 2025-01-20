@@ -1,0 +1,329 @@
+
+Shepherd
+========
+
+> {-# LANGUAGE AllowAmbiguousTypes #-}
+> {-# LANGUAGE DataKinds #-}
+> {-# LANGUAGE FlexibleContexts #-}
+> {-# LANGUAGE FlexibleInstances #-}
+> {-# LANGUAGE FunctionalDependencies #-}
+> {-# LANGUAGE MultiParamTypeClasses #-}
+> {-# LANGUAGE PolyKinds #-}
+> {-# LANGUAGE ScopedTypeVariables #-}
+> {-# LANGUAGE TypeApplications #-}
+> {-# LANGUAGE TypeFamilies #-}
+> {-# LANGUAGE TypeOperators #-}
+> {-# LANGUAGE UndecidableInstances #-}
+>
+> import Data.Kind
+> import Data.Maybe
+> import Data.Type.Equality
+> import Generics.SOP
+> import Generics.SOP.NP
+
+I fully agree that the way of identifying interesting positions / subterms
+in a datatype that you describe in Section 3 is the way to go, at least in
+the context of the SOP approach, and that it is much superior to an approach
+that is using overlapping type families.
+
+However, I'm somewhat skeptical if that in itself is a very large
+contribution. Both approaches you are describing are rather well-known
+approaches to computing type-level equality in Haskell.
+
+Using overlapping instances goes at least back to Oleg Kiselyov. A reasonably
+good summary and discussion of various approaches is provided at
+
+  http://okmij.org/ftp/Haskell/typeEQ.html
+
+where he, among other variants, discusses
+
+> data HTrue
+> data HFalse
+>
+> class TypeEq x y b | x y -> b
+> instance TypeEq x x HTrue
+> instance b ~ HFalse => TypeEq x y b
+
+This presentation predates promoted kinds, so it's not using promoted
+type-level Booleans, and also closed type families, so it is dismissing
+type families as the open flavour could not overlap, but it's otherwise
+in direct correspondence to the overlapping instances technique you are
+using.
+
+Avoiding this need for overlap was one of the primary motivations to introduce
+closed type families, so the `Equal` type family you're presenting at the
+beginning of Section 3 also is in use for a long time.
+
+Despite all this, I think it is useful knowledge to repeat, because I often
+have the feeling that it is not generally known that
+
+- you can generally eliminate overlapping instances by introducing a type
+  family that computes which of the different branches to take and then using
+  the type family to resolve the overlap;
+
+- instantiating the constraint parameters of generics-sop with equality
+  constraints or variants thereof is often useful.
+
+I think you should give proper credit to the history of these approaches
+though. I see you actually mention Oleg's work in the Related Work section,
+but I would definitely mention this at the point where you're discussing
+it already, because otherwise it's unclear what claims you're making.
+
+Section 2
+---------
+
+I like how you manage to give a rather short yet (I think) still understandable
+introduction to the generics-sop approach in Section 2. I also understand that
+using higher-order functions as provided by generics-sop is adding yet another
+layer of complexity that is tempting to avoid. However, I do think that being
+able to use these higher-order functions is one of the two primary advantages
+that generics-sop has over plain GHC.Generics (the other being that the
+encoding is more precise and does not allow incorrectly nested sums and
+products). This is a point I will also be returning to when discussing the
+zipper later. Perhaps an option would be to show the straight-forward implementations
+of the functions as you do, by pattern matching on the structure of NS and NP,
+and then also show as an example a higher-order implementation without explaining
+it in detail.
+
+This being said, I was very confused when I first saw `subtermsNP` at the top
+of page 5, because at this point you suggest that this is a valid approach that
+you would be able to implement. I think this is misleading, and you should
+immediately make it clear that this cannot lead to success.
+
+Section 3.1
+-----------
+
+In Section 3.1, you then call your class `Proof`, but in fact you choose
+a very weak form of proof, which is admittedly sufficient for your purposes
+here, but allows lots of "strange" instances that do not actually witness
+equalities.
+
+I think I'd somewhat prefer the following implementation:
+
+> type family Equal (x :: a) (y :: a) :: Bool where
+>   Equal x x = True
+>   Equal _ _ = False
+>
+> class DecideEqAux (eq :: Bool) (a :: Type) (b :: Type) where
+>   decideEqAux :: Maybe (b :~: a)
+>
+> instance (a ~ b) => DecideEqAux True a b where
+>   decideEqAux = Just Refl
+>
+> instance DecideEqAux False a b where
+>   decideEqAux = Nothing
+>
+> class DecideEqAux (Equal a b) a b => DecideEq (a :: Type) (b :: Type) where
+>   decideEq :: Maybe (b :~: a)
+>
+> instance DecideEqAux (Equal a b) a b => DecideEq a b where
+>   decideEq = decideEqAux @(Equal a b)
+
+This is using the `:~:` type from `Data.Type.Equality` which captures
+a true equality witness.
+
+You can then say
+
+> subtermsNP :: forall a xs . All (DecideEq a) xs => NP I xs -> [a]
+> subtermsNP =
+>     catMaybes
+>   . collapse_NP
+>   . cmap_NP (Proxy @(DecideEq a))
+>       (mapIK (\ x -> fmap (\ y -> castWith y x) decideEq))
+
+or use the corrsponding case-based definition.
+
+Of course, your `Proof` class is more flexible, because it does not
+require an actual equality proof. If you have any use cases for this
+flexibility, it might be nice to include or at least mention them.
+
+Section 3.2
+-----------
+
+I find the premise of this section a bit problematic. You seem to indicate
+that there is a problem in defining `show` that stems from the lack of
+handling of recursive positions. This is not true.
+
+The reason that `gshow` in `basic-sop` is simplified is merely to provide
+a simpler example. It is easy enough to give a full implementation of generic
+show using the `generics-sop` approach, as to some extent is done in the
+`pretty-show` package, or more faithfully in the following gist:
+
+  https://gist.github.com/kosmikus/c3ef3bb42638f359d598eb37af2519aa
+
+I find it very strange that you're tying the use of parentheses to occurrences
+of recursion. Clearly, this is in general not true, as these two concepts have
+very little to do with each other.  You've just chosen a datatype (binary
+trees with labels in the leaves) where the need for parentheses and a recursive
+position accidentally coincide.
+
+At the end of Section 3.2, you make a very interesting remark, saying that
+your function can be used without any additional instance declarations, whereas
+yours can be used on recursive datatypes directly.
+
+While the pattern of using
+
+< instance Show T where
+<   show = gshow
+
+can of course be simplified using either default signatures (if it wasn't
+`Show`) or otherwise `DerivingVia`, there is still an interesting trade-off
+here. I wish you would provide a more detailed discussion of this. I'm quite
+convinced that your pattern can be advantageous in some situations, but there
+will likely be others where it is less flexible.
+
+Section 4
+---------
+
+In the beginning you say that "regular datatypes" are "a subset of datatypes
+that can be viewed as a least fixed point of some polynomial expression on the
+types". I find that ambiguous and would rephrase it.
+
+You then say "All mentioned solutions require a datatype ..." While this is
+true, it's still biased. There are other zippers available for Haskell that do
+not have this requirement, for example, the "Scrap your zippers" approach
+(`syz` package) or the lens-based zippers provided by the `zippers` package.
+Ok, once again, I see you actually mention syz later in the Related Work
+section, but here you really just provide a one-sentence mention, which I
+hardly think is sufficient for an approach that is relatively similar to yours.
+
+I guess it boils down to what exactly you claim your contribution is. In the
+beginning of the paper, you're not entirely clear whether the zipper is primarily
+a use case demonstrating the feasibility of your approach for a larger example,
+or whether this particular zipper is a contribution in itself, for example, by
+being easier to apply to systems of mutually recursive datatypes than the
+multirec zipper.
+
+If your claim is the latter, then I think you have to discuss the other
+zippers that aren't based on fixed-point views as well, and make a comparison.
+
+The zipper itself is rather complex (as zippers unfortunately always tend to
+be), and I am not fully convinced that the `generics-sop` approach, as much
+as I am obviously a fan, is actually well-suited here.
+
+It is very elegant to differentiate binary sums and products. Doing the same
+for n-ary sums and products looks rather complicated. I also think you are not
+always arguing clearly for all your design decisions. I am not convinced that
+including the constraints in the `Loc` type is necessary and/or a good idea.
+It's possible that it is required, but this does not become clear. In other
+code based on `generics-sop`, I've almost always made the observation that it
+is better not to parameterize the datatypes themselves, but to have additional
+constraints (along the lines of `All`) that express that all necessary positions
+must fulfill all necessary constraints where needed.
+
+A possible advantage of a generics-sop-based zipper could be that somehow the
+fact that generics-sop is well suited for operating with higher-order functions
+could transfer to the zipper scenario and would allow more powerful operations
+on the context types. You aren't discussing this, however.
+
+Furthermore, I know the multirec zipper doesn't do this either. But I wonder
+whether with the relatively structured type information available in the
+`generics-sop` codes, one could not do better and navigate in such a way
+that the focused type would be statically known. This would result in a rather
+different kind of zipper, but possibly one that is more useful in practice.
+I often find that having to update positions in a type-agnostic way is not
+particularly helpful in practice.
+
+I still want to perform a few more experiments with sop-based zippers myself,
+and perhaps I can make some further suggestions then. On the other hand, I'm
+aware that I've already let you wait very long for my comments, so I thought
+I'd write this email now rather than delay further.
+
+In summary, I hope you don't let my remarks discourage you, but I think
+you should try to somehow make the contributions of your paper clearer. If
+you want to focus on the method of dealing with recursion on top of
+`generics-sop`, I think you should phrase more clearly that you're
+essentially applying known techniques to this setting, and spell out the
+known techniques in order to make it clearer why it works, and how it works
+in general.
+
+You might also want to pick a better second example than the `gshow`
+function which I did not find very convincing for reasons explained above.
+Perhaps you can discuss a number of other functions that really make use
+of the recursive structure?
+
+Also, perhaps it is worth diving a bit more into the discussion of the
+point you hint at at the end of Section 3. As I said, I think it would be
+nice and fruitful to truly understand under which circumstances tying the
+knot in your way is better, and when it might still be more flexible to
+use an extra type class instance.
+
+I'm not fully certain whether the cost-benefit ratio of the zipper is good
+enough. It's quite possible that your zipper has a lot of benefits, but
+you're not saying clearly enough what they are. I think if you want to
+keep the example, you have to contrast more clearly with both the multirec
+zipper and say how your zipper can possibly apply to families the multirec
+zipper cannot because your treatment of recursion is different and does
+not force you into a higher-order fixed point setting. But you also have
+to contrast with other fixed-point-less approaches and say more clearly how
+your zipper is better or different from those.
+
+If you consider the zipper in this setting a contribution on its own, these
+last points become even more important, and it would be worth considering
+whether then you should not perhaps focus the paper entirely on the zipper,
+using the subterms example just as a simple introductory example to better
+explain the overall approach of how you address recursion.
+
+****************************************************************************
+
+Authors
+=======
+
+One of our longstanding concerns, which you rightly spotted, is deciding where in the paper the emphasis should be: the “no-overlap” technique or the zipper itself. For the first option, perhaps, we should shorten the part about the zipper, keeping only a sketch of the implementation. For the second option, more work and more time is required. We haven't made a comparison with other approaches, and we think the comprehensive comparison takes significant effort. We’re also thinking on rewriting the zipper implementation with higher-order functions from SOP.
+
+In your opinion, which choice would be better given the TFP deadline on August 14th? Also, what do you think, wouldn't it be better decision to give up publication at TFP and go on working on the text about the zipper? In the latter case, it seems reasonable to invite you to guide our work — adding you as the third co-author for the future submission, of course. We'd feel very lucky, if you'd be willing to go this way.
+
+We also have a few detailed questions on your remarks. Feel free to answer them as soon as it is suitable for you.
+
+----
+
+1. gshow
+After reading your comments, we see that `gshow` is a bad example. We liked that before, for it's short enough. Also, it seems to be popular in the literature. Could you suggest any short but good examples of functions that would suit our needs? On the other hand, we could drop the example at all, if we decide on focusing on the zipper example.
+
+2. Extra class instances
+We're uncertain about your remark that there may be some situations when extra type class instances turn out to be more flexible than our approach. We thought that it's always better to be able not to write any instance declarations manually, when it's possible to get them for free. Perhaps, you mean some conditions when our pattern becomes inapplicable? Haven't you any idea what they might be?
+
+3. Comparing zippers
+For comparing our zipper with other approaches, could you suggest any good criteria of characterizing zippers? We probably could measure the performance, but that feels inessential (please, correct us, if you don’t think so). There are some advantages, such as flexibility, that we mention in the paper. Probably we could discuss them in more detail, but some guidance here would be invaluable for us. But are there any other worth measures?
+
+****************************************************************************
+
+Shepherd
+========
+
+> One of our longstanding concerns, which you rightly spotted, is deciding where in the paper the emphasis should be: the “no-overlap” technique or the zipper itself. For the first option, perhaps, we should shorten the part about the zipper, keeping only a sketch of the implementation. For the second option, more work and more time is required. We haven't made a comparison with other approaches, and we think the comprehensive comparison takes significant effort. We’re also thinking on rewriting the zipper implementation with higher-order functions from SOP.
+
+Right, that's certainly a key question.
+
+> In your opinion, which choice would be better given the TFP deadline on August 14th? Also, what do you think, wouldn't it be better decision to give up publication at TFP and go on working on the text about the zipper? In the latter case, it seems reasonable to invite you to guide our work — adding you as the third co-author for the future submission, of course. We'd feel very lucky, if you'd be willing to go this way.
+
+I think for a deadline of August 14th, it's probably unrealistic to come
+up with a good story about just the zipper, so if you want to submit to
+TFP, you should keep / strengthen the focus on the no-overlap technique.
+
+Whether you should give up on submitting to TFP is something I can
+hardly judge. I don't even know what the format requirements for the TFP
+post-proceedings are, but I'd assume you could in principle just
+resubmit the paper as it is now? If so, I'd probably try to make some
+improvements to the paper, and emphasise the no-overlap technique as
+the main topic. This still might get rejected (primarily, I would be
+worried, because the contribution is rather small), but it might also
+get accepted, and even if not, you'd get more feedback from reviewers,
+some of which might be useful. So if you think you can do this without
+too much investment, I would probably take that chance.
+
+None of this would remove the possibility of writing another paper about
+just the zipper. (Not even if you keep some treatment of the zipper in
+the TFP submission, because most likely a full paper about the zipper
+would end up looking vastly different, and it wouldn't be hard to argue
+that there's a significant new contribution in such a paper.)
+
+Regarding me guiding your work and possibly becoming a co-author on the
+zipper paper: I'm honoured that you would ask me. But I'm not sure if
+you're doing yourselves a favour. My time is limited, and you've seen
+already how long it took to provide proper feedback on this paper of
+yours. I'm not sure if I can commit enough time to this project to be
+of much use. Let's perhaps say that I'm happy to try to continue to give
+some advice and help you along, and then when it comes close to writing
+this down, we can reflect on whether my input was large enough to
+deserve more than a mention in the acknowledgements.
